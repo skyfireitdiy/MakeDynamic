@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'browser_address_bar.ui'
+#
+# Created by: PyQt5 UI code generator 5.12.1
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_Form(object):
+    def setupUi(self, Form):
+        Form.setObjectName("Form")
+        Form.resize(595, 41)
+        self.horizontalLayout = QtWidgets.QHBoxLayout(Form)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.label = QtWidgets.QLabel(Form)
+        self.label.setObjectName("label")
+        self.horizontalLayout.addWidget(self.label)
+        self.edt_address = QtWidgets.QLineEdit(Form)
+        self.edt_address.setObjectName("edt_address")
+        self.horizontalLayout.addWidget(self.edt_address)
+        self.btn_visit = QtWidgets.QPushButton(Form)
+        self.btn_visit.setObjectName("btn_visit")
+        self.horizontalLayout.addWidget(self.btn_visit)
+        self.btn_backward = QtWidgets.QPushButton(Form)
+        self.btn_backward.setObjectName("btn_backward")
+        self.horizontalLayout.addWidget(self.btn_backward)
+        self.btn_frontward = QtWidgets.QPushButton(Form)
+        self.btn_frontward.setObjectName("btn_frontward")
+        self.horizontalLayout.addWidget(self.btn_frontward)
+        self.btn_refresh = QtWidgets.QPushButton(Form)
+        self.btn_refresh.setObjectName("btn_refresh")
+        self.horizontalLayout.addWidget(self.btn_refresh)
+
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("Form", "Form"))
+        self.label.setText(_translate("Form", "地址："))
+        self.btn_visit.setText(_translate("Form", "访问"))
+        self.btn_backward.setText(_translate("Form", "后退"))
+        self.btn_frontward.setText(_translate("Form", "前进"))
+        self.btn_refresh.setText(_translate("Form", "刷新"))
+
+
