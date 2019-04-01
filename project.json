@@ -3,10 +3,11 @@
   "root_dir": "/path/to/website/root/dir",
   "data": [
     {
+      "file": "/relative/file/path",
       "name": "data_id",
-      "type": "int/float/list/dict",
+      "type": "int/float/list/dict/html/image/file",
       "operation": ["append", "remove", "sort", "edit"],
-      "data": ""
+      "data": "the data"
     }
   ]
 }
