@@ -1,0 +1,12 @@
+{
+  "website_name": "xxx系统",
+  "root_dir": "/path/to/website/root/dir",
+  "data": [
+    {
+      "name": "data_id",
+      "type": "int/float/list/dict",
+      "operation": ["append", "remove", "sort", "edit"],
+      "data": ""
+    }
+  ]
+}
