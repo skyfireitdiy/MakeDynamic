@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QDirModel
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+# coding=utf-8
+import sys
+
 from PyQt5.QtCore import QUrl
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDirModel
 
 from ui_mainwindow import Ui_MainWindow
-
-import sys
 
 
 class MainWindow(QMainWindow):
