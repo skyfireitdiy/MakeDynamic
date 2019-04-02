@@ -1,13 +1,25 @@
 {
   "website_name": "xxx系统",
   "root_dir": "/path/to/website/root/dir",
-  "data": [
-    {
-      "file": "/relative/file/path",
-      "name": "data_id",
-      "type": "int/float/list/dict/html/image/file",
-      "operation": ["append", "remove", "sort", "edit"],
-      "data": "the data"
-    }
-  ]
+  "data": {
+    "int": [
+      {
+        "file": "/relative/file/path",
+        "name": "data_id",
+        "operation": [
+          "append",
+          "remove",
+          "sort",
+          "edit"
+        ],
+        "data": "the data"
+      }
+    ],
+    "float": [],
+    "list": [],
+    "dict": [],
+    "html": [],
+    "image": [],
+    "file": []
+  }
 }
