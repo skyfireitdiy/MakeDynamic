@@ -1,25 +1,30 @@
 {
-  "website_name": "xxx系统",
-  "root_dir": "/path/to/website/root/dir",
-  "data": {
-    "int": [
+  "title":"XXX后台管理系统",
+  "type_data": {
+    "number": [],
+    "string": [],
+    "list": [
       {
         "file": "/relative/file/path",
-        "name": "data_id",
+        "name": "文章",
         "operation": [
           "append",
           "remove",
           "sort",
           "edit"
         ],
+        "desc": "",
         "data": "the data"
       }
     ],
-    "float": [],
-    "list": [],
     "dict": [],
     "html": [],
     "image": [],
     "file": []
-  }
+  },
+  "user":{
+    "name":"张三",
+    "img":"http://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"
+  },
+  "footer":"XXX 公司 版权所有"
 }

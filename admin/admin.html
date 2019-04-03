@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,7 +10,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="format-detection" content="telephone=no">
 
-    <link rel="stylesheet" href="layui/css/layui.css"  media="all">
+    <link rel="stylesheet" href="layui/css/layui.css" media="all">
+
 </head>
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin" id="app">
@@ -22,18 +20,18 @@
         <div class="layui-logo">[[ title ]]</div>
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-left">
-            <li class="layui-nav-item"  v-for="(name,key) in big_type">
-                <a @click=on_big_type_changed([[key]])>[[ name ]]</a>
+            <li class="layui-nav-item" v-for="(value,key) in type_data">
+                <a @click=on_big_type_changed(key)>[[ key ]]</a>
             </li>
         </ul>
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
                 <a href="javascript:;">
-                    <img src="//tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg" class="layui-nav-img">
-                    贤心
+                    <img :src="user.img" class="layui-nav-img">
+                    [[ user.name ]]
                 </a>
                 <dl class="layui-nav-child">
-                    <dd><a href="">安全设置</a></dd>
+                    <dd><a href="">密码设置</a></dd>
                 </dl>
             </li>
             <li class="layui-nav-item"><a href="">注销</a></li>
@@ -45,9 +43,9 @@
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
             <ul class="layui-nav layui-nav-tree">
                 <li class="layui-nav-item layui-nav-itemed">
-                    <dd><a>子分类1</a></dd>
-                    <dd><a>子分类2</a></dd>
-                    <dd><a>子分类3</a></dd>
+                    <dd v-for="(data,key) in type_data[current_type]">
+                        <a @click="on_edit_data(key,data);">[[ key ]]</a>
+                    </dd>
                 </li>
             </ul>
         </div>
@@ -56,27 +54,28 @@
     <div class="layui-body">
         <!-- 内容主体区域 -->
         <div style="padding: 15px;">
-
-
+            <data_form v-if="current_data !== undefined" :current_data="current_data" :current_name="current_name"
+                       :current_type="current_type" :stack="[current_type, current_name]" @data_change="on_data_change($event)"></data_form>
+            <br />
         </div>
     </div>
 
     <div class="layui-footer">
         <!-- 底部固定区域 -->
-        © layui.com - 底部固定区域
+        [[ footer ]]
     </div>
 </div>
 <script src="layui/layui.js" charset="utf-8"></script>
 <script>
     //JavaScript代码区域
-    layui.use('element', function(){
+    layui.use('element', function () {
         var element = layui.element;
 
     });
 </script>
 <script>
     var _hmt = _hmt || [];
-    (function() {
+    (function () {
         var hm = document.createElement("script");
         hm.src = "https://hm.baidu.com/hm.js?d214947968792b839fd669a4decaaffc";
         var s = document.getElementsByTagName("script")[0];
@@ -87,52 +86,156 @@
 
 <script src="vue.js"></script>
 <script>
-
-
-    let left_side=new Vue({
+    let app = new Vue({
         el: "#app",
         data: {
-            title:"XXX后台管理系统",
-            big_type: {
-                "int":"整数",
-                "float": "浮点数",
-                "list": "列表",
-                "dict": "字典",
-                "html": "HTML",
-                "image": "图像",
-                "file": "文件"
-            },
+            title: "XXX后台管理系统",
             type_data: {
-                "int": [
-                    {
-                        "file": "/relative/file/path",
-                        "name": "data_id",
-                        "operation": [
-                            "append",
-                            "remove",
-                            "sort",
-                            "edit"
-                        ],
-                        "data": "the data"
-                    }
-                ],
-                "float": [],
-                "list": [],
-                "dict": [],
-                "html": [],
-                "image": [],
-                "file": []
+                "首页": {},
+                "产品案例": {
+                    "文章介绍": [
+                        {
+                            "标题": "怎样写一个Hello World",
+                            "年龄": 25,
+                            "作者": "SkyFire",
+                            "内容": {
+                                "正文":{
+                                    "内容":"这就是Hello World",
+                                    "图片":{
+                                        "url":"http://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "联系我们": {},
+                "招贤纳士": {},
             },
-            current_type: "list"
+            user: {
+                "name": "张三",
+                "img": "http://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"
+            },
+
+            footer: "XXX 公司 版权所有",
+            current_type: "number",
+            current_data: undefined,
+            current_name: undefined
         },
         delimiters: ["[[", "]]"],
-        methods:{
+        methods: {
             on_big_type_changed: function (new_type) {
-                alert(new_type);
                 this.current_type = new_type;
+                this.current_data = undefined;
+                this.current_name = undefined;
+            },
+            on_edit_data: function (name,_data) {
+                this.current_data = _data;
+                this.current_name = name;
+            },
+            on_data_change : function (path, data) {
+                alert(path + data);
             }
-        }
+        },
+        components: {
+            data_form: {
+                name: "data_form",
+                props: ["current_data", "current_name", "current_type", "stack"],
+                delimiters: ["[[", "]]"],
+                template: `
+                            <div class="layui-form layui-form-pane">
+                                [[ make_index_string(stack) ]]
+                                <div v-if="get_data_type(current_data) == 'Array'">
+                                    <div class="layui-collapse" lay-accordion="">
+                                      <div class="layui-colla-item">
+                                        <div class="layui-colla-content layui-show" v-for="(item, index) in current_data" >
+                                            <data_form :current_data="item" :current_name="index" :current_type="current_type" :stack="add_item_to_array(stack, index)" @data_change="$emit('data_change', $event);"></data_form>
+                                        </div>
+                                      </div>
+                                   </div>
+                                </div>
+                                <div v-else-if="get_data_type(current_data) == 'Object'">
+                                    <table class="layui-table" lay-size="sm">
+                                      <colgroup>
+                                        <col width="150">
+                                        <col>
+                                      </colgroup>
+                                      <thead>
+                                        <tr>
+                                          <th>属性名称</th>
+                                          <th>值</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr v-for="(value,key) in current_data">
+                                          <td>[[ key ]]</td>
+                                          <td><data_form :current_data=value :current_name="key" :current_type="current_type" :stack="add_item_to_array(stack, key)" @data_change="$emit('data_change', $event);"></data_form></td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                </div>
+                                <div v-else-if="get_data_type(current_data) == 'String'">
+                                    <div class="layui-form-item layui-form-text">
+                                        <div class="layui-input-block">
+                                            <textarea placeholder="请输入内容" :value="current_data" :ref="stack.join('_')" class="layui-textarea"></textarea>
+                                        </div>
+                                    </div>
+                                    <button class="layui-btn layui-btn-normal layui-btn-radius" @click="$emit('data_change', stack, this.$refs)">确认修改</button>
+                                </div>
+
+                                <div v-else-if="get_data_type(current_data) == 'Number'">
+                                    <div class="layui-form-item layui-form-text">
+                                        <div class="layui-input-inline">
+                                            <input type="number" name="phone" lay-verify="required|number" :ref="stack.join('_')" placeholder="请输入数字" autocomplete="off" class="layui-input" :value="current_data">
+                                        </div>
+                                    </div>
+                                    <button class="layui-btn layui-btn-normal layui-btn-radius" @click="$emit('data_change', stack, this.$refs)">确认修改</button>
+                                </div>
+                            </div>
+                            `,
+                methods: {
+                    get_data_type: function (_data) {
+                        if (_data.type === undefined) {
+                            if (_data instanceof Array) {
+                                return "Array";
+                            } else if (typeof _data == "string") {
+                                return "String";
+                            } else if (typeof _data == "number") {
+                                return "Number";
+                            } else {
+                                return "Object";
+                            }
+                        } else {
+                            return _data.type;
+                        }
+                    },
+                    add_item_to_array: function (arr, item) {
+                        let ret = [];
+                        for(let i of arr){
+                            ret.push(i);
+                        }
+                        ret.push(item);
+                        return ret;
+                    },
+                    to_string : function(obj){
+                        if(typeof obj == "string"){
+                            return '"'+obj+"'";
+                        }
+                        return obj;
+                    },
+                    make_index_string : function (stack) {
+                        let ret = "data";
+                        for (let s of stack) {
+                            ret += "[" + this.to_string(s) + "]";
+                        }
+                        return ret;
+                    }
+                }
+
+            }
+        },
     });
+
 
 </script>
 
