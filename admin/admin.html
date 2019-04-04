@@ -20,15 +20,9 @@
         <div class="layui-logo">[[ title ]]</div>
         <!-- 头部区域（可配合layui已有的水平导航） -->
         <ul class="layui-nav layui-layout-left">
-            <li class="layui-nav-item" v-for="(value,key) in type_data">
-                <a @click=on_big_type_changed(key)>[[ key ]]</a>
+            <li class="layui-nav-item">
+                <a></a>
             </li>
-            <div class="layui-btn-group" v-if="dev">
-                <button class="layui-btn layui-btn-sm"><i class="layui-icon" title="新增"></i></button>
-                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_type_dlg"><i class="layui-icon"
-                                                                                                    title="删除"></i>
-                </button>
-            </div>
         </ul>
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
@@ -48,15 +42,8 @@
         <div class="layui-side-scroll">
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
             <ul class="layui-nav">
-                <li class="layui-nav-item layui-nav-itemed" v-for="(data,key) in type_data[current_type]">
-                    <a @click="on_edit_data(key,data);">[[ key ]]</a>
-                </li>
-                <li>
-                    <div class="layui-btn-group" v-if="dev">
-                        <button class="layui-btn layui-btn-sm"><i class="layui-icon" title="新增"></i></button>
-                        <button class="layui-btn layui-btn-sm layui-btn-danger"><i class="layui-icon" title="删除"></i>
-                        </button>
-                    </div>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a @click="on_edit_data">数据</a>
                 </li>
             </ul>
         </div>
@@ -64,10 +51,11 @@
 
     <div class="layui-body">
         <!-- 内容主体区域 -->
-        <div style="padding: 15px;">
-            <data_form v-if="current_data !== undefined" :current_data="current_data" :current_name="current_name"
-                       :current_type="current_type" :stack="[]" @data_change="on_data_change($event)"
-                       @delete_data="on_delete_data($event)" :dev="dev"></data_form>
+        <div style="padding: 0px;">
+            <data_form v-if="page_type=='data'" :current_data="type_data" :stack="[]"
+                       @data_change="on_data_change($event)"
+                       @delete_data="on_delete_data($event)" :dev="dev">
+            </data_form>
             <br/>
         </div>
     </div>
@@ -76,28 +64,21 @@
         [[ footer ]]
     </div>
 
-    <form class="layui-form delete_type">
-        <div :class="{'layui-hide':hide_delete_type, 'layui-form-item':true}">
-            <div class="layui-input-block" v-for="(value,key) in type_data">
-                <input type="checkbox" lay-skin="primary" checked="" :title="key" :value="key">
-                <div class="layui-form-checkbox" lay-skin="primary">
-                    <i class="layui-icon layui-icon-ok"></i>
-                </div>
-            </div>
-        </div>
-    </form>
-
-
 </div>
 
 <script src="layui/layui.all.js" charset="utf-8"></script>
 <script>
-    layui.use('element', function () {
+    layui.use(['element', 'layer', "form"], function(){
         let element = layui.element;
-    });
-    layui.use('form', function () {
+        let layer = layui.layer;
         let form = layui.form;
+
+        //监听折叠
+        element.on('collapse(test)', function(data){
+            layer.msg('展开状态：'+ data.show);
+        });
     });
+
 </script>
 
 <script src="vue.js"></script>
