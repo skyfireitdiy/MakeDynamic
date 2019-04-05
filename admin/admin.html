@@ -43,7 +43,7 @@
             <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
             <ul class="layui-nav">
                 <li class="layui-nav-item layui-nav-itemed">
-                    <a @click="on_edit_data">数据</a>
+                    <a @click="on_edit_data">数据设置</a>
                 </li>
             </ul>
         </div>
@@ -54,7 +54,9 @@
         <div style="padding: 0px;">
             <data_form v-if="page_type=='data'" :current_data="type_data" :stack="[]"
                        @data_change="on_data_change($event)"
-                       @delete_data="on_delete_data($event)" :dev="dev">
+                       @delete_data="on_delete_data($event)"
+                       @add_new_data="on_add_new_data($event)"
+                       :dev="dev">
             </data_form>
             <br/>
         </div>
@@ -67,22 +69,27 @@
 </div>
 
 <script src="layui/layui.all.js" charset="utf-8"></script>
-<script>
-    layui.use(['element', 'layer', "form"], function(){
-        let element = layui.element;
-        let layer = layui.layer;
-        let form = layui.form;
-
-        //监听折叠
-        element.on('collapse(test)', function(data){
-            layer.msg('展开状态：'+ data.show);
-        });
-    });
-
-</script>
 
 <script src="vue.js"></script>
 <script src="admin.js"></script>
+<script>
+    layui.use('element', function(){
+        let element = layui.element;
+        let $ = layui.jquery;
+    });
+
+    layui.use("form", function () {
+        let form = layui.form;
+        let $ = layui.jquery;
+        form.render();
+    });
+
+    layui.use("layer", function () {
+        let layer = layui.layer;
+        let $ = layui.jquery;
+
+    });
+</script>
 
 </body>
 </html>
