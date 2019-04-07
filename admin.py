@@ -1,8 +1,15 @@
 from flask import *
+from flask_wtf import *
+from wtforms import *
 from config import global_config, global_data
 import json
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_url_path="/", template_folder="./admin")
+
+
+class LoginForm(FlaskForm):
+    username = StringField('用户名', validators=[validators.DataRequired()])
+    password = PasswordField("密码", validators=[validators.DataRequired()])
 
 
 @admin_blueprint.route("/")
@@ -12,13 +19,12 @@ def admin_root():
 
 @admin_blueprint.route("/index.html")
 def admin_root_js():
-    data = global_config.config["data"]
+    config = global_config.config
     return render_template("index.html",
                            type_data=global_data.config,
-                           title=data["title"],
-                           dev=data["dev"],
-                           user=data["user"],
-                           footer=data["footer"]
+                           title=config["title"],
+                           dev=config["dev"],
+                           footer=config["footer"]
                            )
 
 
@@ -50,9 +56,9 @@ def on_data_change():
     v = global_data.config
     for k in data["stack"][:-1]:
         v = v[k]
-    v[data["stack"][len(data["stack"])-1]] = data["value"]
+    v[data["stack"][len(data["stack"]) - 1]] = data["value"]
     global_data.save()
-    return json.dumps({"code":0})
+    return json.dumps({"code": 0})
 
 
 @admin_blueprint.route("/delete_data", methods=["POST"])
@@ -63,4 +69,19 @@ def on_delete_data():
         v = v[k]
     del v[data["index"]]
     global_data.save()
-    return json.dumps({"code":0})
+    return json.dumps({"code": 0})
+
+
+@admin_blueprint.route("/change_base_info", methods=["POST"])
+def on_change_base_info():
+    title = request.form["title"]
+    footer = request.form["footer"]
+    global_config.config["title"] = title
+    global_config.config["footer"] = footer
+    global_config.save()
+    return json.dumps({"code": 0})
+
+@admin_blueprint.route("/login_page.html")
+def on_login_page():
+    form = LoginForm()
+    render_template("login_page.html", form=form)

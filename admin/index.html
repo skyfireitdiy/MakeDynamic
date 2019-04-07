@@ -18,15 +18,7 @@
     <title>[[ title ]]</title>
     <div class="layui-header" id="header">
         <div class="layui-logo">[[ title ]]</div>
-        <ul class="layui-nav layui-layout-right">
-            <li class="layui-nav-item">
-                <a>
-                    <img :src="user.img" class="layui-nav-img">
-                    [[ user.name ]]
-                </a>
-            </li>
-            <li class="layui-nav-item"><a href="">注销</a></li>
-        </ul>
+
     </div>
 
     <div class="layui-side layui-bg-black" id="left_side">
@@ -44,8 +36,8 @@
                     <dl class="layui-nav-child">
                         <dd><a @click="page_type='file'">普通文件上传</a></dd>
                         <dd><a @click="page_type='image'">图片上传</a></dd>
-                        <dd><a @click="page_type='image'">音乐上传</a></dd>
-                        <dd><a @click="page_type='image'">视频上传</a></dd>
+                        <dd><a @click="page_type='music'">音乐上传</a></dd>
+                        <dd><a @click="page_type='video'">视频上传</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item layui-nav-itemed">
@@ -57,7 +49,7 @@
                 <li class="layui-nav-item layui-nav-itemed">
                     <a>安全设置</a>
                     <dl class="layui-nav-child">
-                        <dd><a @click="page_type='password'">管理员信息</a></dd>
+                        <dd><a @click="page_type='password'">密码修改</a></dd>
                         <dd><a @click="page_type='dev'">开发者模式</a></dd>
                     </dl>
                 </li>
@@ -75,7 +67,25 @@
                        @add_new_data="on_add_new_data($event)"
                        :dev="dev">
             </data_form>
-            <br/>
+            <div v-show="page_type==='base'"  style="text-align: center;">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">标题栏</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="title" v-model="title" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">网站版权</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="footer" v-model="footer" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <button @click="change_base_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
+            </div>
         </div>
     </div>
 
@@ -328,7 +338,6 @@
                 type_data:{{type_data|tojson}},
                 title:{{title|tojson}},
                 dev:{{dev|tojson}},
-                user:{{user|tojson}},
                 footer:{{footer|tojson}},
 
                 page_type: "",
@@ -338,6 +347,22 @@
                 data_form: data_form
             },
             methods: {
+                change_base_info: function(){
+                    let _this = this;
+                    layui.use(["layer","jquery"], function () {
+                        let layer = layui.layer;
+                        let $ = layui.jquery;
+                        layer.confirm("确认将后台管理标题修改为\"" + _this.title + "\",版权信息修改为\"" + _this.footer + "\"?",{
+                            btn: ["确认", "取消"]
+                        }, function () {
+                            $.post("change_base_info", {title:_this.title, footer: _this.footer}, function () {
+                                layer.msg("修改成功", {icon:1});
+                            });
+                        }, function () {
+
+                        })
+                    });
+                },
                 on_add_new_data: function (data) {
                     let _this = this;
                     layui.use(["jquery", "layer"], function () {

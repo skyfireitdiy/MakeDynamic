@@ -1,11 +1,5 @@
 {
-    "data": {
-        "title": "XXX\u540e\u53f0\u7ba1\u7406\u7cfb\u7edf",
-        "dev": true,
-        "user": {
-            "name": "\u5f20\u4e09",
-            "img": "http://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"
-        },
-        "footer": "XXX \u516c\u53f8 \u7248\u6743\u6240\u6709"
-    }
+    "dev": true,
+    "title": "\u6d69\u701a\u661f\u8fb0\u95e8\u6237\u7f51\u7ad9\u540e\u53f0\u7ba1\u7406",
+    "footer": "\u6d69\u701a\u661f\u8fb0\u5de5\u4f5c\u5ba4\u7248\u6743\u6240\u6709"
 }
