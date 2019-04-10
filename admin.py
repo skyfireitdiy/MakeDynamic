@@ -2,7 +2,9 @@ from flask import *
 from flask_wtf import *
 from wtforms import *
 from config import global_config, global_data
+from admin_user import AdminUser
 import json
+from flask_login import login_user, logout_user, login_required
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_url_path="/", template_folder="./admin")
 
@@ -13,22 +15,22 @@ class LoginForm(FlaskForm):
 
 
 @admin_blueprint.route("/")
-def admin_root():
-    return redirect("/index.html")
-
-
 @admin_blueprint.route("/index.html")
+@login_required
 def admin_root_js():
     config = global_config.config
     return render_template("index.html",
                            type_data=global_data.config,
                            title=config["title"],
                            dev=config["dev"],
-                           footer=config["footer"]
+                           footer=config["footer"],
+                           user_name=config["user"]["name"],
+                           user_img=config["user"]["img"]
                            )
 
 
 @admin_blueprint.route("/add_data", methods=["POST"])
+@login_required
 def on_add_data():
     data = json.loads(request.form["data"])
     v = global_data.config
@@ -51,6 +53,7 @@ def on_add_data():
 
 
 @admin_blueprint.route("/data_change", methods=["POST"])
+@login_required
 def on_data_change():
     data = json.loads(request.form["data"])
     v = global_data.config
@@ -62,6 +65,7 @@ def on_data_change():
 
 
 @admin_blueprint.route("/delete_data", methods=["POST"])
+@login_required
 def on_delete_data():
     data = json.loads(request.form["data"])
     v = global_data.config
@@ -73,6 +77,7 @@ def on_delete_data():
 
 
 @admin_blueprint.route("/change_base_info", methods=["POST"])
+@login_required
 def on_change_base_info():
     title = request.form["title"]
     footer = request.form["footer"]
@@ -81,7 +86,31 @@ def on_change_base_info():
     global_config.save()
     return json.dumps({"code": 0})
 
+
 @admin_blueprint.route("/login_page.html")
 def on_login_page():
     form = LoginForm()
-    render_template("login_page.html", form=form)
+    return render_template("login_page.html", form=form)
+
+
+@admin_blueprint.route('/login', methods=["POST"])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user_name = request.form.get('username', None)
+        password = request.form.get('password', None)
+        remember_me = request.form.get('remember_me', False)
+        user = AdminUser()
+        if user.verify_password(user_name, password):
+            login_user(user, remember=remember_me)
+            return json.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
+        else:
+            return json.dumps(dict(code=1, msg="用户名或密码错误"))
+    return render_template('login_page.html', form=form)
+
+
+@admin_blueprint.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("login_page.html")

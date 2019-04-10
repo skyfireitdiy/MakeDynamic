@@ -18,7 +18,15 @@
     <title>[[ title ]]</title>
     <div class="layui-header" id="header">
         <div class="layui-logo">[[ title ]]</div>
-
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <img :src="user.img" class="layui-nav-img">
+                    [[ user.name ]]
+                </a>
+            </li>
+            <li class="layui-nav-item"><a href="logout">注销</a></li>
+        </ul>
     </div>
 
     <div class="layui-side layui-bg-black" id="left_side">
@@ -47,8 +55,9 @@
                     </dl>
                 </li>
                 <li class="layui-nav-item layui-nav-itemed">
-                    <a>安全设置</a>
+                    <a>用户及安全</a>
                     <dl class="layui-nav-child">
+                        <dd><a @click="page_type='change_user_img'">更换头像</a></dd>
                         <dd><a @click="page_type='password'">密码修改</a></dd>
                         <dd><a @click="page_type='dev'">开发者模式</a></dd>
                     </dl>
@@ -72,7 +81,7 @@
                     <div class="layui-inline">
                         <label class="layui-form-label">标题栏</label>
                         <div class="layui-input-inline">
-                            <input type="text" name="title" v-model="title" autocomplete="off" class="layui-input">
+                            <input type="text" name="title" v-model="tmp_title" autocomplete="off" class="layui-input">
                         </div>
                     </div>
                 </div>
@@ -80,7 +89,7 @@
                     <div class="layui-inline">
                         <label class="layui-form-label">网站版权</label>
                         <div class="layui-input-inline">
-                            <input type="text" name="footer" v-model="footer" autocomplete="off" class="layui-input">
+                            <input type="text" name="footer" v-model="tmp_footer" autocomplete="off" class="layui-input">
                         </div>
                     </div>
                 </div>
@@ -107,6 +116,15 @@
         let form = layui.form;
         let layer = layui.layer;
 
+        let csrf_token = "{{ csrf_token() }}";
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+                }
+            }
+        });
 
         let data_form = Vue.component("data_form", {
                 name: "data_form",
@@ -336,11 +354,16 @@
             el: "#app",
             data: {
                 type_data:{{type_data|tojson}},
-                title:{{title|tojson}},
+                title:"{{title}}",
                 dev:{{dev|tojson}},
-                footer:{{footer|tojson}},
-
+                footer:"{{footer}}",
                 page_type: "",
+                user:{
+                    name:"{{user_name}}",
+                    img:"{{user_img}}"
+                },
+                tmp_title:"{{title}}",
+                    tmp_footer:"{{footer}}"
             },
             delimiters: ["[[", "]]"],
             components: {
@@ -355,8 +378,10 @@
                         layer.confirm("确认将后台管理标题修改为\"" + _this.title + "\",版权信息修改为\"" + _this.footer + "\"?",{
                             btn: ["确认", "取消"]
                         }, function () {
-                            $.post("change_base_info", {title:_this.title, footer: _this.footer}, function () {
+                            $.post("change_base_info", {title:_this.tmp_title, footer: _this.tmp_footer}, function () {
                                 layer.msg("修改成功", {icon:1});
+                                _this.title = _this.tmp_title;
+                                _this.footer = _this.tmp_footer;
                             });
                         }, function () {
 
