@@ -95,6 +95,33 @@
                 </div>
                 <button @click="change_base_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
             </div>
+            <div v-show="page_type==='password'" style="text-align: center">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">旧密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="old_ps" v-model="old_ps" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">新密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="new_ps" v-model="new_ps" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">重复新密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="new_ps2" v-model="new_ps2" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <button @click="change_password" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
+            </div>
         </div>
     </div>
 
@@ -106,6 +133,7 @@
 
 <script src="vue.js"></script>
 <script src="layui/layui.all.js" charset="utf-8"></script>
+<script src="md5.js"></script>
 
 <script>
 
@@ -136,7 +164,7 @@
                         single_line: true,
                         expand: false,
                         new_key_name: "",
-                        new_type: "Number"
+                        new_type: "Number",
                     }
                 },
                 methods: {
@@ -224,7 +252,7 @@
                         layui.use("layer", function () {
                             let layer = layui.layer;
                             layer.open({
-                                type: 1 //此处以iframe举例
+                                type: 1
                                 ,title: "请选择要添加的类型"
                                 ,area: ['450px', '120px']
                                 ,shade: 0
@@ -363,13 +391,43 @@
                     img:"{{user_img}}"
                 },
                 tmp_title:"{{title}}",
-                    tmp_footer:"{{footer}}"
+                tmp_footer:"{{footer}}",
+                old_ps:"",
+                new_ps:"",
+                new_ps2:""
             },
             delimiters: ["[[", "]]"],
             components: {
                 data_form: data_form
             },
             methods: {
+                change_password: function(){
+                    if(this.old_ps.length === 0){
+                        layer.msg("请输入旧密码", {icon:2});
+                        return;
+                    }
+                    if(this.new_ps.length === 0){
+                        layer.msg("新密码不能为空", {icon:2});
+                        return;
+                    }
+                    if(this.new_ps !== this.new_ps2){
+                        layer.msg("密码与确认密码不一致", {icon:2});
+                        return;
+                    }
+                    let _this = this;
+                    $.post("change_ps", {old_ps:md5(this.old_ps), new_ps:md5(this.new_ps)}, function(res){
+                        let result = JSON.parse(res);
+                        if(result.code !==0)
+                        {
+                            layer.msg(result.msg, {icon:2});
+                        }else{
+                            layer.msg("密码修改成功", {icon:1});
+                            _this.new_ps = _this.new_ps2 = _this.old_ps = "";
+                        }
+                    }).fail(function(){
+                        layer.msg("密码修改失败", {icon:2});
+                    });
+                },
                 change_base_info: function(){
                     let _this = this;
                     layui.use(["layer","jquery"], function () {

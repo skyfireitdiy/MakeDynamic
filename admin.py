@@ -4,7 +4,8 @@ from wtforms import *
 from config import global_config, global_data
 from admin_user import AdminUser
 import json
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_url_path="/", template_folder="./admin")
 
@@ -114,3 +115,16 @@ def login():
 def logout():
     logout_user()
     return redirect("login_page.html")
+
+
+@admin_blueprint.route("/change_ps", methods=["POST"])
+@login_required
+def change_ps():
+    old_ps = request.form["old_ps"]
+    new_ps = request.form["new_ps"]
+    if not current_user.verify_password(current_user.username, old_ps):
+        return json.dumps(dict(code=1, msg="原密码错误"))
+    else:
+        global_config.config["user"]["password"] = generate_password_hash(new_ps)
+        global_config.save()
+        return json.dumps(dict(code=0))
