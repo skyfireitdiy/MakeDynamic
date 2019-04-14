@@ -1,11 +1,15 @@
-from flask import *
-from flask_wtf import *
-from wtforms import *
-from config import global_config, global_data
-from admin_user import AdminUser
 import json
+import uuid
+
+from flask import *
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_wtf import *
 from werkzeug.security import generate_password_hash
+from wtforms import *
+
+from admin_user import AdminUser
+from config import global_config, global_data
+from md_utils import *
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_url_path="/", template_folder="./admin")
 
@@ -13,6 +17,11 @@ admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_u
 class LoginForm(FlaskForm):
     username = StringField('用户名', validators=[validators.DataRequired()])
     password = PasswordField("密码", validators=[validators.DataRequired()])
+
+
+def get_file_list(root):
+    url_list = os.listdir(os.path.join("file", root))
+    return [{"url": os.path.join("/file", root, url).replace('\\', '/')} for url in url_list]
 
 
 @admin_blueprint.route("/")
@@ -26,7 +35,11 @@ def admin_root_js():
                            dev=config["dev"],
                            footer=config["footer"],
                            user_name=config["user"]["name"],
-                           user_img=config["user"]["img"]
+                           user_img=config["user"]["img"],
+                           file_data=get_file_list("file_data"),
+                           music_data=get_file_list("music_data"),
+                           image_data=get_file_list("image_data"),
+                           video_data=get_file_list("video_data"),
                            )
 
 
@@ -128,3 +141,47 @@ def change_ps():
         global_config.config["user"]["password"] = generate_password_hash(new_ps)
         global_config.save()
         return json.dumps(dict(code=0))
+
+
+@admin_blueprint.route("delete_file", methods=["POST"])
+@login_required
+def delete_file():
+    file_name = os.path.join("file", "file_data", my_secure_filename(request.form["url"]))
+    if not os.path.exists(file_name):
+        return json.dumps(dict(code=1, msg="文件不存在"))
+    os.remove(file_name)
+    return json.dumps(dict(code=0))
+
+
+@admin_blueprint.route("upload_file", methods=["POST"])
+@login_required
+def upload_file():
+    if "file" not in request.files:
+        return json.dumps(dict(code=1, msg="应该上传文件"))
+    f = request.files["file"]
+    se_filename = my_secure_filename(f.filename)
+    file_name = os.path.join("file", "file_data", se_filename)
+    if os.path.exists(file_name):
+        file_name = os.path.join("file", "file_data", uuid.uuid4().hex + "_" + se_filename)
+    f.save(file_name)
+    return json.dumps(dict(code=0, url=os.path.join("/",file_name.replace('\\', '/'))))
+
+
+@admin_blueprint.route("upload_image", methods=["POST"])
+@login_required
+def upload_image():
+    if "file" not in request.files:
+        return json.dumps(dict(code=1, msg="应该上传文件"))
+    f = request.files["file"]
+    se_filename = my_secure_filename(f.filename)
+    if not valid_image_ext(se_filename):
+        return json.dumps(dict(code=2,msg="图片上传仅支持jpg, jpeg, png, gif格式"))
+    file_name = os.path.join("file", "image_data", se_filename)
+    if os.path.exists(file_name):
+        file_name = os.path.join("file", "image_data", uuid.uuid4().hex + "_" + se_filename)
+    f.save(file_name)
+    return json.dumps(dict(code=0, url=os.path.join("/",file_name.replace('\\', '/'))))
+
+
+if __name__ == "__main__":
+    print(get_file_list('file_data'))

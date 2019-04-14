@@ -40,12 +40,12 @@
                     </dl>
                 </li>
                 <li class="layui-nav-item layui-nav-itemed">
-                    <a>数据上传</a>
+                    <a>文件管理</a>
                     <dl class="layui-nav-child">
-                        <dd><a @click="page_type='file'">普通文件上传</a></dd>
-                        <dd><a @click="page_type='image'">图片上传</a></dd>
-                        <dd><a @click="page_type='music'">音乐上传</a></dd>
-                        <dd><a @click="page_type='video'">视频上传</a></dd>
+                        <dd><a @click="page_type='file'">普通文件管理</a></dd>
+                        <dd><a @click="page_type='image'">图片管理</a></dd>
+                        <dd><a @click="page_type='music'">音乐管理</a></dd>
+                        <dd><a @click="page_type='video'">视频管理</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item layui-nav-itemed">
@@ -122,6 +122,76 @@
                 </div>
                 <button @click="change_password" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
             </div>
+            <div v-show="page_type==='file'">
+                <button type="button" class="layui-btn" id="upload_file"><i class="layui-icon"></i>选择文件</button>
+                <button type="button" class="layui-btn" id="start_upload_file">开始上传</button>
+                <table class="layui-table">
+                    <colgroup>
+                        <col>
+                        <col width="100px">
+                    </colgroup>
+                    <thead class="layui-table-header">
+                        <tr>
+                            <th>
+                                文件
+                            </th>
+                            <th>
+                                操作
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in file_data">
+                            <td><a :href="item.url">[[item.url]]</a></td>
+                            <td>
+                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(file_data,item.url)">删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 本页需要加载大量图片，所以使用v-if到显示的时候再加载 -->
+            <div v-if="page_type==='image'">
+
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn" id="upload_image">选择图片</button>
+                    <button type="button" class="layui-btn" id="start_upload_image">开始上传</button>
+                    <div class="layui-upload-list">
+                        <img class="layui-upload-img" width="100px" height="100px" style="border-width: thin" id="upload_img_preview">
+                    </div>
+                </div>
+                <table class="layui-table">
+                    <colgroup>
+                        <col>
+                        <col width="120px">
+                        <col width="100px">
+                    </colgroup>
+                    <thead class="layui-table-header">
+                    <tr>
+                        <th>
+                            图片
+                        </th>
+                        <th>
+                            缩略图
+                        </th>
+                        <th>
+                            操作
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in image_data">
+                            <td>[[item.url]]</td>
+                            <td>
+                                <img style="border-width: 1px" width="100px" height="100px" :src="item.url">
+                            </td>
+                            <td>
+                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -138,11 +208,12 @@
 <script>
 
 
-    layui.use(["jquery", "element", "layer", "form"], function () {
+    layui.use(["jquery", "element", "layer", "form", "upload"], function () {
         let $ = layui.jquery;
         let element = layui.element;
         let form = layui.form;
         let layer = layui.layer;
+        let upload = layui.upload;
 
         let csrf_token = "{{ csrf_token() }}";
 
@@ -153,6 +224,8 @@
                 }
             }
         });
+
+
 
         let data_form = Vue.component("data_form", {
                 name: "data_form",
@@ -394,13 +467,44 @@
                 tmp_footer:"{{footer}}",
                 old_ps:"",
                 new_ps:"",
-                new_ps2:""
+                new_ps2:"",
+                file_data:{{file_data|tojson}},
+                image_data:{{image_data|tojson}},
+                music_data:{{music_data|tojson}},
+                video_data:{{video_data|tojson}}
             },
             delimiters: ["[[", "]]"],
             components: {
                 data_form: data_form
             },
             methods: {
+                delete_file: function(data_src ,file_url){
+                    let _this = this;
+                    layer.confirm("确认删除文件:"+file_url+"?",{
+                        btn:["确认","取消"]
+                    }, function () {
+                        let url = file_url.substring(file_url.lastIndexOf("/")+1);
+                        $.post("delete_file", {url:url}, function (res) {
+                            let result = JSON.parse(res);
+                            if(result.code === 0){
+                                layer.msg("删除成功", {icon:1});
+                                for(let i in data_src){
+                                    if(data_src[i].url === file_url)
+                                    {
+                                        Vue.delete(data_src, i);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                layer.msg("删除失败：" + result.msg, {icon:2});
+                            }
+                        }).fail(function () {
+                            layer.msg("删除失败", {icon:2});
+                        });
+                    }, function () {
+
+                    });
+                },
                 change_password: function(){
                     if(this.old_ps.length === 0){
                         layer.msg("请输入旧密码", {icon:2});
@@ -503,7 +607,6 @@
                                     layer.msg("错误：" + ret.code, {icon: 2});
                                     return;
                                 }
-
                                 Vue.set(v, key, data.value);
                                 layer.msg('更新成功', {icon: 1});
                             }).fail(function (res) {
@@ -548,6 +651,50 @@
 
         element.init();
         form.render();
+
+        upload.render({
+            elem: '#upload_file',
+            url: 'upload_file',
+            accept: 'file',
+            auto: false,
+            bindAction:"#start_upload_file",
+            done: function(res){
+                if(res.code === 0) {
+                    layer.msg("文件上传成功，文件url:" + res.url, {icon: 1});
+                    app.$data.file_data.push({url:res.url});
+                }else{
+                    layer.msg("上传失败："+ res.msg, {icon:2});
+                }
+            },
+            error: function (res) {
+                layer.msg("文件上传失败" , {icon:2});
+            }
+        });
+
+        upload.render({
+            elem: '#upload_image',
+            url: 'upload_image',
+            exts:"jpeg|jpg|png|gif",
+            auto:false,
+            bindAction: "#start_upload_image",
+            choose: function(obj){
+                obj.preview(function(index, file, result){
+                    $('#upload_img_preview').attr('src', result);
+                });
+            },
+            done: function(res){
+                if(res.code === 0){
+                    layer.msg('图片上传成功，文件url:' + res.url, {icon:1});
+                    app.$data.image_data.push({url:res.url});
+                } else{
+                    layer.msg("上传失败："+ res.msg, {icon:2});
+                }
+            },
+            error: function () {
+                layer.msg("图片上传失败" , {icon:2});
+            }
+        });
+
     });
 
 
