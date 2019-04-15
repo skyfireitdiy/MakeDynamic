@@ -164,7 +164,7 @@ def upload_file():
     if os.path.exists(file_name):
         file_name = os.path.join("file", "file_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json.dumps(dict(code=0, url=os.path.join("/",file_name.replace('\\', '/'))))
+    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_image", methods=["POST"])
@@ -175,12 +175,44 @@ def upload_image():
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_image_ext(se_filename):
-        return json.dumps(dict(code=2,msg="图片上传仅支持jpg, jpeg, png, gif格式"))
+        return json.dumps(dict(code=2, msg="图片上传仅支持jpg, jpeg, png, gif格式"))
     file_name = os.path.join("file", "image_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "image_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json.dumps(dict(code=0, url=os.path.join("/",file_name.replace('\\', '/'))))
+    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+
+
+@admin_blueprint.route("upload_music", methods=["POST"])
+@login_required
+def upload_music():
+    if "file" not in request.files:
+        return json.dumps(dict(code=1, msg="应该上传文件"))
+    f = request.files["file"]
+    se_filename = my_secure_filename(f.filename)
+    if not valid_music_ext(se_filename):
+        return json.dumps(dict(code=2, msg="音乐上传仅支持wav，mp3，ogg，acc，webm格式"))
+    file_name = os.path.join("file", "music_data", se_filename)
+    if os.path.exists(file_name):
+        file_name = os.path.join("file", "music_data", uuid.uuid4().hex + "_" + se_filename)
+    f.save(file_name)
+    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+
+
+@admin_blueprint.route("upload_video", methods=["POST"])
+@login_required
+def upload_video():
+    if "file" not in request.files:
+        return json.dumps(dict(code=1, msg="应该上传文件"))
+    f = request.files["file"]
+    se_filename = my_secure_filename(f.filename)
+    if not valid_video_ext(se_filename):
+        return json.dumps(dict(code=2, msg="音乐上传仅支持mp4，ogg，webm格式"))
+    file_name = os.path.join("file", "video_data", se_filename)
+    if os.path.exists(file_name):
+        file_name = os.path.join("file", "video_data", uuid.uuid4().hex + "_" + se_filename)
+    f.save(file_name)
+    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 if __name__ == "__main__":

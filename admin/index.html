@@ -51,7 +51,7 @@
                 <li class="layui-nav-item layui-nav-itemed">
                     <a>基础设置</a>
                     <dl class="layui-nav-child">
-                        <dd><a @click="page_type='base'">网站信息设置</a></dd>
+                        <dd><a @click="page_type='base'">后台信息设置</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item layui-nav-itemed">
@@ -150,8 +150,7 @@
                     </tbody>
                 </table>
             </div>
-            <!-- 本页需要加载大量图片，所以使用v-if到显示的时候再加载 -->
-            <div v-if="page_type==='image'">
+            <div v-show="page_type==='image'">
 
                 <div class="layui-upload">
                     <button type="button" class="layui-btn" id="upload_image">选择图片</button>
@@ -183,12 +182,85 @@
                         <tr v-for="item in image_data">
                             <td>[[item.url]]</td>
                             <td>
-                                <img style="border-width: 1px" width="100px" height="100px" :src="item.url">
+                                <img @click="show_image(item.url)" style="border-width: 1px" width="100px" height="100px" :src="item.url">
                             </td>
                             <td>
                                 <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
                             </td>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-show="page_type==='music'">
+
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn" id="upload_music">选择音乐</button>
+                    <button type="button" class="layui-btn" id="start_upload_music">开始上传</button>
+                </div>
+                <table class="layui-table">
+                    <colgroup>
+                        <col>
+                        <col width="300px">
+                        <col width="100px">
+                    </colgroup>
+                    <thead class="layui-table-header">
+                    <tr>
+                        <th>
+                            音乐
+                        </th>
+                        <th>
+                            试听
+                        </th>
+                        <th>
+                            操作
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="item in music_data">
+                        <td>[[item.url]]</td>
+                        <td>
+                            <audio controls>
+                                <source :src="item.url">
+                                浏览器不支持该格式
+                            </audio>
+                        </td>
+                        <td>
+                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-show="page_type==='video'">
+
+                <div class="layui-upload">
+                    <button type="button" class="layui-btn" id="upload_video">选择视频</button>
+                    <button type="button" class="layui-btn" id="start_upload_video">开始上传</button>
+                </div>
+                <table class="layui-table">
+                    <colgroup>
+                        <col>
+                        <col width="200px">
+                    </colgroup>
+                    <thead class="layui-table-header">
+                    <tr>
+                        <th>
+                            音乐
+                        </th>
+                        <th>
+                            操作
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="item in video_data">
+                        <td>[[item.url]]</td>
+                        <td>
+                            <button class="layui-btn layui-btn-sm" @click="show_video(item.url)">播放</button>
+                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
@@ -478,6 +550,27 @@
                 data_form: data_form
             },
             methods: {
+                show_video: function(url){
+                    layer.open({
+                        type:1,
+                        content: "<video width=\"320\" height=\"240\" controls>\n" +
+                            "  <source src=\"" + url + "\">\n" +
+                            "浏览器不支持播放此格式\n" +
+                            "</video>",
+                        title: url
+                    });
+                },
+                show_image: function(url){
+                    layer.photos({
+                        photos:{
+                            data:[
+                                {
+                                    src: url
+                                }
+                            ]
+                        }
+                    });
+                },
                 delete_file: function(data_src ,file_url){
                     let _this = this;
                     layer.confirm("确认删除文件:"+file_url+"?",{
@@ -652,6 +745,8 @@
         element.init();
         form.render();
 
+        let load_index = null;
+
         upload.render({
             elem: '#upload_file',
             url: 'upload_file',
@@ -659,6 +754,7 @@
             auto: false,
             bindAction:"#start_upload_file",
             done: function(res){
+                layer.close(load_index);
                 if(res.code === 0) {
                     layer.msg("文件上传成功，文件url:" + res.url, {icon: 1});
                     app.$data.file_data.push({url:res.url});
@@ -666,7 +762,11 @@
                     layer.msg("上传失败："+ res.msg, {icon:2});
                 }
             },
+            before: function(){
+                load_index = layer.load(0);
+            },
             error: function (res) {
+                layer.close(load_index);
                 layer.msg("文件上传失败" , {icon:2});
             }
         });
@@ -682,7 +782,11 @@
                     $('#upload_img_preview').attr('src', result);
                 });
             },
+            before: function(){
+                load_index = layer.load(0);
+            },
             done: function(res){
+                layer.close(load_index);
                 if(res.code === 0){
                     layer.msg('图片上传成功，文件url:' + res.url, {icon:1});
                     app.$data.image_data.push({url:res.url});
@@ -691,7 +795,58 @@
                 }
             },
             error: function () {
+                layer.close(load_index);
                 layer.msg("图片上传失败" , {icon:2});
+            }
+        });
+
+
+        upload.render({
+            elem: '#upload_music',
+            url: 'upload_music',
+            exts:"wav|mp3|ogg|acc|webm",
+            auto: false,
+            bindAction:"#start_upload_music",
+            done: function(res){
+                layer.close(load_index);
+                if(res.code === 0) {
+                    layer.msg("音乐上传成功，音乐url:" + res.url, {icon: 1});
+                    app.$data.music_data.push({url:res.url});
+                }else{
+                    layer.msg("上传失败："+ res.msg, {icon:2});
+                }
+            },
+            before: function(){
+                load_index = layer.load(0);
+            },
+            error: function (res) {
+                layer.close(load_index);
+                layer.msg("音乐上传失败" , {icon:2});
+            }
+        });
+
+
+        upload.render({
+            elem: '#upload_video',
+            url: 'upload_video',
+            exts:"mp4|webm|ogg",
+            auto: false,
+            bindAction:"#start_upload_video",
+            done: function(res){
+                layer.close(load_index);
+                if(res.code === 0) {
+                    layer.msg("视频上传成功，视频url:" + res.url, {icon: 1});
+                    app.$data.video_data.push({url:res.url});
+                }else{
+                    layer.msg("上传失败："+ res.msg, {icon:2});
+                }
+            },
+            before: function(){
+                load_index = layer.load(0);
+            },
+            error: function (res) {
+                layer.close(load_index);
+                layer.msg("视频上传失败" , {icon:2});
             }
         });
 

@@ -4,6 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 import os
 from flask_login import LoginManager
 from admin_user import AdminUser
+from file import file_blueprint
 
 app = Flask(__name__)
 
@@ -25,4 +26,5 @@ def load_user(user_id):
 
 if __name__ == "__main__":
     app.register_blueprint(admin_blueprint, url_prefix="/admin")
+    app.register_blueprint(file_blueprint, url_prefix="/file")
     app.run(host="0.0.0.0", port=8080, debug=True, use_reloader=True)

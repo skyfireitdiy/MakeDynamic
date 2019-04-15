@@ -22,3 +22,13 @@ def my_secure_filename(filename):
 def valid_image_ext(file_name: str):
     ext = [".jpg", ".jpeg", ".png", ".gif"]
     return os.path.splitext(file_name)[-1] in ext
+
+
+def valid_music_ext(file_name: str):
+    ext = [".wav", ".mp3", ".ogg", ".acc", ".webm"]
+    return os.path.splitext(file_name)[-1] in ext
+
+
+def valid_video_ext(file_name: str):
+    ext = [".mp4", ".ogg", ".webm"]
+    return os.path.splitext(file_name)[-1] in ext
