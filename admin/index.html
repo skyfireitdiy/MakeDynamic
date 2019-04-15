@@ -826,6 +826,9 @@
                                 Vue.set(v, data.key, value);
                             }
                             layer.msg("添加成功", {icon: 1});
+                            Vue.nextTick(function(){
+                                element.init();
+                            });
                         }).fail(function (res) {
                             layer.msg("添加失败", {icon: 2});
                         });
