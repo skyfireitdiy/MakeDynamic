@@ -57,9 +57,9 @@
                 <li class="layui-nav-item layui-nav-itemed">
                     <a>用户及安全</a>
                     <dl class="layui-nav-child">
-                        <dd><a @click="page_type='change_user_img'">更换头像</a></dd>
+                        <dd><a @click="page_type='user_info'">用户信息</a></dd>
                         <dd><a @click="page_type='password'">密码修改</a></dd>
-                        <dd><a @click="page_type='dev'">开发者模式</a></dd>
+                        <dd><a @click="dev_mode">开发者模式</a></dd>
                     </dl>
                 </li>
 
@@ -162,7 +162,7 @@
                 <table class="layui-table">
                     <colgroup>
                         <col>
-                        <col width="120px">
+                        <col width="180px">
                         <col width="100px">
                     </colgroup>
                     <thead class="layui-table-header">
@@ -171,7 +171,7 @@
                             图片
                         </th>
                         <th>
-                            缩略图
+                            缩略图（点击预览）
                         </th>
                         <th>
                             操作
@@ -226,7 +226,7 @@
                             </audio>
                         </td>
                         <td>
-                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
+                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(music_data,item.url)">删除</button>
                         </td>
                     </tr>
                     </tbody>
@@ -258,16 +258,65 @@
                         <td>[[item.url]]</td>
                         <td>
                             <button class="layui-btn layui-btn-sm" @click="show_video(item.url)">播放</button>
-                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
+                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(video_data,item.url)">删除</button>
                         </td>
                     </tr>
                     </tbody>
                 </table>
             </div>
+            <div v-show="page_type==='user_info'" style="text-align: center">
+                <img :src="tmp_user_img" class="layui-nav-img" style="width: 100px; height: 100px;">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">用户头像（URL）</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="user_img" v-model="tmp_user_img" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">用户名</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="user_name" v-model="tmp_user_name" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="change_user_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
+            </div>
+            <div v-show="page_type==='dev'" style="text-align: center">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">原开发密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="old_dev_ps" v-model="old_dev_ps" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">新开发密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="new_dev_ps" v-model="new_dev_ps" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="layui-form-label">重复新开发密码</label>
+                        <div class="layui-input-inline">
+                            <input type="password" name="new_dev_ps2" v-model="new_dev_ps2" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <button @click="change_dev_password" class="layui-btn layui-btn-radius layui-btn-sm">修改开发密码</button>
+                <button class="layui-btn layui-btn-sm layui-btn-radius layui-btn-danger" @click="close_dev">关闭开发者模式</button>
+            </div>
         </div>
     </div>
 
-    <div class="layui-footer">
+    <div class="layui-footer" style="text-align: center">
         [[ footer ]]
     </div>
 
@@ -543,13 +592,86 @@
                 file_data:{{file_data|tojson}},
                 image_data:{{image_data|tojson}},
                 music_data:{{music_data|tojson}},
-                video_data:{{video_data|tojson}}
+                video_data:{{video_data|tojson}},
+                tmp_user_img: "{{user_img}}",
+                tmp_user_name: "{{user_name}}",
+                old_dev_ps:"",
+                new_dev_ps:"",
+                new_dev_ps2:""
             },
             delimiters: ["[[", "]]"],
             components: {
                 data_form: data_form
             },
             methods: {
+                close_dev: function(){
+                    let _this = this;
+                    layer.confirm("确认关闭开发模式？", {
+                        btn:["确认", "取消"]
+                    }, function(){
+                        $.post("close_dev",{},function () {
+                            layer.msg("关闭开发模式成功", {icon:1});
+                            _this.dev = false;
+                            _this.page_type = "";
+                        }).fail(function(){
+                            layer.msg("关闭开发模式成功", {icon:1});
+                            _this.dev = false;
+                            _this.page_type = "";
+                        });
+                    }, function(){});
+                },
+                dev_mode: function(){
+                    let _this = this;
+                    if(this.dev){
+                        this.page_type='dev';
+                    }else {
+                        layer.prompt({
+                            formType: 1,
+                            value: '',
+                            title: '请输入开发密码(开发者模式为开发团队预留的开发接口，一般无需设置)',
+                        }, function (value, index, elem) {
+                            layer.close(index);
+                            $.post("open_dev", {dev_ps: md5(value)}, function (res) {
+                                let result = JSON.parse(res);
+                                if (result.code === 0) {
+                                    _this.dev = true;
+                                    layer.msg("打开开发者模式成功", {icon: 1});
+                                    _this.page_type = 'dev';
+                                } else {
+                                    layer.msg("打开开发者模式失败：" + result.msg, {icon: 2});
+                                }
+                            }).fail(function () {
+                                layer.msg("打开开发者模式失败", {icon: 2});
+                            });
+                        });
+                    }
+                },
+                change_user_info: function(){
+                    let _this = this;
+                    layer.confirm("确认修改用户信息？", {
+                        btn: ["确认", "取消"]
+                    }, function(){
+                        $.post("change_user_info", {name: _this.tmp_user_name, img: _this.tmp_user_img}, function(res){
+                            let result = JSON.parse(res);
+                            if(result.code === 0){
+                                layer.msg("修改成功", {icon:1});
+                                _this.user.name = _this.tmp_user_name;
+                                _this.user.img = _this.tmp_user_img;
+                            } else {
+                                layer.msg("修改失败：" + result.msg, {icon:2});
+                                _this.tmp_user_name = _this.user.name;
+                                _this.tmp_user_img = _this.user.img;
+                            }
+                        }).fail(function(){
+                            layer.msg("修改失败", {icon:2});
+                            _this.tmp_user_name = _this.user.name;
+                            _this.tmp_user_img = _this.user.img;
+                        });
+                    }, function(){
+                        _this.tmp_user_name = _this.user.name;
+                        _this.tmp_user_img = _this.user.img;
+                    })
+                },
                 show_video: function(url){
                     layer.open({
                         type:1,
@@ -577,7 +699,9 @@
                         btn:["确认","取消"]
                     }, function () {
                         let url = file_url.substring(file_url.lastIndexOf("/")+1);
-                        $.post("delete_file", {url:url}, function (res) {
+                        let type = file_url.substring(0,file_url.lastIndexOf("/"));
+                        type = type.substring(type.lastIndexOf("/")+1);
+                        $.post("delete_file", {url:url, type:type}, function (res) {
                             let result = JSON.parse(res);
                             if(result.code === 0){
                                 layer.msg("删除成功", {icon:1});
@@ -598,6 +722,33 @@
 
                     });
                 },
+                change_dev_password: function(){
+                    if(this.old_dev_ps.length === 0){
+                        layer.msg("请输入原开发密码", {icon:2});
+                        return;
+                    }
+                    if(this.new_dev_ps.length === 0){
+                        layer.msg("新开发密码不能为空", {icon:2});
+                        return;
+                    }
+                    if(this.new_dev_ps !== this.new_dev_ps2){
+                        layer.msg("新开发密码与确认开发密码不一致", {icon:2});
+                        return;
+                    }
+                    let _this = this;
+                    $.post("change_dev_ps", {old_dev_ps:md5(this.old_dev_ps), new_dev_ps:md5(this.new_dev_ps)}, function(res){
+                        let result = JSON.parse(res);
+                        if(result.code !==0)
+                        {
+                            layer.msg("开发密码修改失败:" + result.msg, {icon:2});
+                        }else{
+                            layer.msg("开发密码修改成功", {icon:1});
+                            _this.new_dev_ps = _this.new_dev_ps2 = _this.old_dev_ps = "";
+                        }
+                    }).fail(function(){
+                        layer.msg("开发密码修改失败", {icon:2});
+                    });
+                },
                 change_password: function(){
                     if(this.old_ps.length === 0){
                         layer.msg("请输入旧密码", {icon:2});
@@ -616,7 +767,7 @@
                         let result = JSON.parse(res);
                         if(result.code !==0)
                         {
-                            layer.msg(result.msg, {icon:2});
+                            layer.msg("密码修改失败：" + result.msg, {icon:2});
                         }else{
                             layer.msg("密码修改成功", {icon:1});
                             _this.new_ps = _this.new_ps2 = _this.old_ps = "";
@@ -733,7 +884,7 @@
                                 Vue.delete(v, data.index);
                                 layer.msg('删除成功', {icon: 1});
                             }).fail(function () {
-                                layer.msg('删除失败', {icon: 1});
+                                layer.msg('删除失败', {icon: 2});
                             })
                         }, function () {
                         });
@@ -774,7 +925,7 @@
         upload.render({
             elem: '#upload_image',
             url: 'upload_image',
-            exts:"jpeg|jpg|png|gif",
+            exts:"jpeg|jpg|png|gif|ico",
             auto:false,
             bindAction: "#start_upload_image",
             choose: function(obj){

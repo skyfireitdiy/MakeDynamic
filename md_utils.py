@@ -20,7 +20,7 @@ def my_secure_filename(filename):
 
 
 def valid_image_ext(file_name: str):
-    ext = [".jpg", ".jpeg", ".png", ".gif"]
+    ext = [".jpg", ".jpeg", ".png", ".gif", ".ico"]
     return os.path.splitext(file_name)[-1] in ext
 
 

@@ -4,10 +4,10 @@ import uuid
 from flask import *
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf import *
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import *
 
-from admin_user import AdminUser
+from admin_user import admin_user
 from config import global_config, global_data
 from md_utils import *
 
@@ -27,12 +27,12 @@ def get_file_list(root):
 @admin_blueprint.route("/")
 @admin_blueprint.route("/index.html")
 @login_required
-def admin_root_js():
+def admin_root():
     config = global_config.config
     return render_template("index.html",
                            type_data=global_data.config,
                            title=config["title"],
-                           dev=config["dev"],
+                           dev=current_user.dev,
                            footer=config["footer"],
                            user_name=config["user"]["name"],
                            user_img=config["user"]["img"],
@@ -46,6 +46,8 @@ def admin_root_js():
 @admin_blueprint.route("/add_data", methods=["POST"])
 @login_required
 def on_add_data():
+    if not current_user.dev:
+        abort(403)
     data = json.loads(request.form["data"])
     v = global_data.config
     for k in data["stack"]:
@@ -81,6 +83,8 @@ def on_data_change():
 @admin_blueprint.route("/delete_data", methods=["POST"])
 @login_required
 def on_delete_data():
+    if not current_user.dev:
+        abort(403)
     data = json.loads(request.form["data"])
     v = global_data.config
     for k in data["stack"]:
@@ -113,10 +117,10 @@ def login():
     if form.validate_on_submit():
         user_name = request.form.get('username', None)
         password = request.form.get('password', None)
-        remember_me = request.form.get('remember_me', False)
-        user = AdminUser()
+        user = admin_user
         if user.verify_password(user_name, password):
-            login_user(user, remember=remember_me)
+            login_user(user, remember=False)
+            current_user.dev = False
             return json.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
         else:
             return json.dumps(dict(code=1, msg="用户名或密码错误"))
@@ -127,6 +131,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    current_user.dev = False
     return redirect("login_page.html")
 
 
@@ -143,10 +148,23 @@ def change_ps():
         return json.dumps(dict(code=0))
 
 
+@admin_blueprint.route("/change_dev_ps", methods=["POST"])
+@login_required
+def change_dev_ps():
+    old_ps = request.form["old_dev_ps"]
+    new_ps = request.form["new_dev_ps"]
+    if not check_password_hash(global_config.config["dev_ps"], old_ps):
+        return json.dumps(dict(code=1, msg="原开发密码错误"))
+    else:
+        global_config.config["dev_ps"] = generate_password_hash(new_ps)
+        global_config.save()
+        return json.dumps(dict(code=0))
+
+
 @admin_blueprint.route("delete_file", methods=["POST"])
 @login_required
 def delete_file():
-    file_name = os.path.join("file", "file_data", my_secure_filename(request.form["url"]))
+    file_name = os.path.join("file", request.form["type"], my_secure_filename(request.form["url"]))
     if not os.path.exists(file_name):
         return json.dumps(dict(code=1, msg="文件不存在"))
     os.remove(file_name)
@@ -214,6 +232,33 @@ def upload_video():
     f.save(file_name)
     return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
+
+@admin_blueprint.route("change_user_info", methods=["POST"])
+@login_required
+def change_user_info():
+    name = request.form["name"]
+    img = request.form["img"]
+    global_config.config["user"]["img"] = img
+    global_config.config["user"]["name"] = name
+    global_config.save()
+    return json.dumps(dict(code=0))
+
+
+@admin_blueprint.route("open_dev", methods=["POST"])
+@login_required
+def open_dev():
+    dev_ps = request.form["dev_ps"]
+    if check_password_hash(global_config.config["dev_ps"], dev_ps):
+        current_user.dev = True
+        return json.dumps(dict(code=0))
+    return json.dumps(dict(code=1, msg="开发密码错误，请联系开发人员"))
+
+
+@admin_blueprint.route("close_dev", methods=["POST"])
+@login_required
+def close_dev():
+    current_user.dev = False
+    return json.dumps(dict(code=0))
 
 if __name__ == "__main__":
     print(get_file_list('file_data'))
