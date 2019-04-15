@@ -181,8 +181,8 @@
                     <tbody>
                         <tr v-for="item in image_data">
                             <td>[[item.url]]</td>
-                            <td>
-                                <img @click="show_image(item.url)" style="border-width: 1px" width="100px" height="100px" :src="item.url">
+                            <td style="text-align: center">
+                                <img @click="show_image(item.url)" style="border-width: 1px" width="40px" height="40px" :src="item.url">
                             </td>
                             <td>
                                 <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
@@ -355,13 +355,23 @@
                 data: function () {
                     return {
                         tmp_value: this.current_data,
-                        single_line: true,
                         expand: false,
                         new_key_name: "",
                         new_type: "Number",
                     }
                 },
                 methods: {
+                    multiline_edit: function(){
+                        let _this = this;
+                        layer.prompt({
+                            value: _this.tmp_value,
+                            title: _this.make_index_string(_this.stack),
+                            formType: 2
+                        }, function (value, index, elem) {
+                            layer.close(index);
+                            _this.tmp_value = value;
+                        });
+                    },
                     make_index_string: function (stack) {
                         let ret = "data";
                         for (let k of stack) {
@@ -537,31 +547,25 @@
                                 </div>
                                 <div v-else-if="get_data_type(current_data) == 'String'">
                                     <div class="layui-form-item layui-form-text">
-                                        <div class="layui-input-block" v-show="single_line">
+                                        <div class="layui-input-block layui-inline">
                                             <input type="text" v-model="tmp_value" autocomplete="off" placeholder="请输入内容"
-                                                   class="layui-input">
-                                        </div>
-                                        <div class="layui-input-block" v-show="!single_line">
-                                            <textarea placeholder="请输入内容" v-model="tmp_value" class="layui-textarea"></textarea>
+                                                   class="layui-input layui-input-inline">
+                                            <button class="layui-btn layui-btn-radius layui-btn-sm" @click="multiline_edit">多行编辑</button>
+                                            <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">
+                                                确认修改
+                                            </button>
                                         </div>
                                     </div>
-                                    <button class="layui-btn layui-btn-radius layui-btn-sm" @click="single_line=!single_line">[[
-                                        single_line?"多行编辑":"单行编辑" ]]
-                                    </button>
-                                    <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">
-                                        确认修改
-                                    </button>
                                 </div>
                                 <div v-else-if="get_data_type(current_data) == 'Number'">
                                     <div class="layui-form-item layui-form-text">
                                         <div class="layui-input-inline">
                                             <input type="number" name="phone" lay-verify="required|number" placeholder="请输入数字"
-                                                   autocomplete="off" class="layui-input" v-model="tmp_value">
+                                                   autocomplete="off" class="layui-input layui-input-inline" v-model="tmp_value">
+                                            <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">确认修改</button>
                                         </div>
                                     </div>
-                                    <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">
-                                        确认修改
-                                    </button>
+
                                 </div>
                             </div>
                         </div>
