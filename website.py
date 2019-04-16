@@ -23,12 +23,12 @@ def url():
 
 @website_blueprint.route("/case.html")
 def case():
-    return render_template("news.html", data=global_data.config)
+    return render_template("case.html", data=global_data.config)
 
 
 @website_blueprint.route("/news.html")
 def news():
-    return render_template("about.html", data=global_data.config)
+    return render_template("news.html", data=global_data.config)
 
 
 @website_blueprint.route("/product.html")
