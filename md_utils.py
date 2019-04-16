@@ -1,4 +1,7 @@
 import os
+import string
+import random
+from captcha.image import ImageCaptcha
 from werkzeug.utils import _windows_device_files
 
 
@@ -32,3 +35,14 @@ def valid_music_ext(file_name: str):
 def valid_video_ext(file_name: str):
     ext = [".mp4", ".ogg", ".webm"]
     return os.path.splitext(file_name)[-1] in ext
+
+
+_captcha_generator = ImageCaptcha()
+
+
+def make_captcha():
+    s = string.ascii_letters + string.digits
+    ret = ""
+    for i in range(4):
+        ret += random.choice(s)
+    return ret, _captcha_generator.generate(ret)

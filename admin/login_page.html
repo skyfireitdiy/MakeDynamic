@@ -11,7 +11,7 @@
 
         .layui-input {
             height: 45px;
-            width: 87%;
+            width: 80%;
             padding-left: 5px;
             font-size: 16px;
             display: inline-block;
@@ -21,19 +21,14 @@
             height: 45px;
         }
 
-        .captcha-input {
-            height: 45px;
-            padding-left: 5px;
-            font-size: 16px;
-        }
-
         .layui-form {
-            width: 20%;
+            width: 25%;
             height: 20%;
             margin: 0 auto;
             margin-top: 10%;
             padding: 15px 28px 0px;
             background: #fff;
+            text-align: center;
         }
 
         .layui-input-block {
@@ -61,15 +56,23 @@
         <h1 style="text-align: center">用户登录</h1>
         <br/>
         <div class="layui-input-block">
-            <label for="username">用户</label>
+            <label for="username">用&nbsp;&nbsp;&nbsp;&nbsp;户</label>
             <input type="text" placeholder="请输入用户名" autocomplete="off" id="username" class="layui-input"
                    lay-verify="required">
         </div>
     </div>
     <div class="layui-form-item input-item">
         <div class="layui-input-block">
-            <label for="password">密码</label>
+            <label for="password">密&nbsp;&nbsp;&nbsp;&nbsp;码</label>
             <input type="password" placeholder="请输入密码" autocomplete="off" id="password" class="layui-input"
+                   lay-verify="required">
+        </div>
+    </div>
+    <img src="data:image/png;base64,{{captcha_data}}" id="captcha_img">
+    <div class="layui-form-item input-item">
+        <div class="layui-input-block">
+            <label for="captcha">验证码</label>
+            <input type="text" placeholder="请输入验证码" autocomplete="off" id="captcha" class="layui-input"
                    lay-verify="required">
         </div>
     </div>
@@ -91,6 +94,19 @@
         form.render();
         let csrf_token = "{{ csrf_token() }}";
 
+        let get_new_captcha = function () {
+            $.post("get_new_captcha", {}, function (res) {
+                let result = JSON.parse(res);
+                if(result.code === 0){
+                    $("#captcha_img").attr("src", "data:image/png;base64," + result.new_captcha);
+                }else{
+                    layer.msg("获取新的验证码失败：" + result.msg, {icon:2});
+                }
+            }).fail(function () {
+                layer.msg("获取新的验证码失败", {icon:2});
+            })
+        };
+
         $.ajaxSetup({
             beforeSend: function (xhr, settings) {
                 if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
@@ -102,17 +118,26 @@
         $("#submit").click(function () {
             let username = $("#username").val();
             let password = $("#password").val();
-            $.post("login", {username: username, password: md5(password)}, function (res) {
+            let captcha = $("#captcha").val();
+            $.post("login", {username: username, password: md5(password), captcha: captcha}, function (res) {
                 let result = JSON.parse(res);
                 if (result.code === 0) {
                     window.location.href = result.href;
                 } else {
                     layer.msg(result.msg, {icon: 2});
+                    if(result.new_captcha !== undefined) {
+                        $("#captcha_img").attr("src", "data:image/png;base64," + result.new_captcha);
+                    }
                 }
             }).fail(function () {
                 layer.msg("用户名或密码错误", {icon: 2});
+                $("#captcha_img").attr("src", "data:image/png;base64," + result.new_captcha);
             });
         });
+
+
+
+        $("#captcha_img").click(get_new_captcha);
     });
 </script>
 

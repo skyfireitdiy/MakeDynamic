@@ -1,22 +1,16 @@
+import base64
 import json
 import uuid
 
 from flask import *
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_wtf import *
 from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms import *
 
 from admin_user import admin_user
 from config import global_config, global_data
 from md_utils import *
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_url_path="/", template_folder="./admin")
-
-
-class LoginForm(FlaskForm):
-    username = StringField('用户名', validators=[validators.DataRequired()])
-    password = PasswordField("密码", validators=[validators.DataRequired()])
 
 
 def get_file_list(root):
@@ -107,24 +101,36 @@ def on_change_base_info():
 
 @admin_blueprint.route("/login_page.html")
 def on_login_page():
-    form = LoginForm()
-    return render_template("login_page.html", form=form)
+    cap_str, cap_img = make_captcha()
+    session["captcha"] = cap_str
+    return render_template("login_page.html", captcha_data=base64.b64encode(cap_img.getvalue()).decode("utf-8"))
 
 
 @admin_blueprint.route('/login', methods=["POST"])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user_name = request.form.get('username', None)
-        password = request.form.get('password', None)
-        user = admin_user
-        if user.verify_password(user_name, password):
-            login_user(user, remember=False)
-            current_user.dev = False
-            return json.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
-        else:
-            return json.dumps(dict(code=1, msg="用户名或密码错误"))
-    return render_template('login_page.html', form=form)
+    user_name = request.form.get('username', None)
+    password = request.form.get('password', None)
+    captcha = request.form.get('captcha', None)
+    user = admin_user
+    if not user.verify_password(user_name, password):
+        cap_str, cap_img = make_captcha()
+        session["captcha"] = cap_str
+        return json.dumps(dict(code=1, msg="用户名或密码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+    elif captcha.lower() != session["captcha"].lower():
+        cap_str, cap_img = make_captcha()
+        session["captcha"] = cap_str
+        return json.dumps(dict(code=1, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+    else:
+        login_user(user, remember=False)
+        current_user.dev = False
+        return json.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
+
+
+@admin_blueprint.route('/get_new_captcha', methods=["POST"])
+def get_new_captcha():
+    cap_str, cap_img = make_captcha()
+    session["captcha"] = cap_str
+    return json.dumps(dict(code=0,  new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
 
 
 @admin_blueprint.route('/logout')
@@ -259,6 +265,7 @@ def open_dev():
 def close_dev():
     current_user.dev = False
     return json.dumps(dict(code=0))
+
 
 if __name__ == "__main__":
     print(get_file_list('file_data'))
