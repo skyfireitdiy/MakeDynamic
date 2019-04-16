@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
-  <title>{{data['主页']['标题']}}</title>
-  <link rel="stylesheet" href="../res/layui/css/layui.css">
-  <link rel="stylesheet" href="../res/static/css/index.css">
+  <title>网络公司-动态详情页</title>
+  <link rel="stylesheet" href="res/layui/css/layui.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
   <!-- nav部分 -->
-  <div class="nav index">
+  <div class="nav">
     <div class="layui-container">
       <!-- 公司logo -->
       <div class="nav-logo">
@@ -23,68 +23,23 @@
         </button>
         <ul class="layui-nav" lay-filter="">
           <li class="layui-nav-item"><a href="product.html">产品</a></li>
-          <li class="layui-nav-item"><a href="news.html">动态</a></li>
+          <li class="layui-nav-item layui-this"><a href="news.html">动态</a></li>
           <li class="layui-nav-item"><a href="case.html">案例</a></li>
           <li class="layui-nav-item"><a href="about.html">关于</a></li>
         </ul>
       </div>
     </div>
   </div>
-  <!-- banner部分 -->
-  <div>
-    <div class="layui-carousel" id="banner">
-      <div carousel-item>
-        {% for item in data['主页']['轮播图']  %}
-        <div>
-          <img src="{{ item['url'] }}">
-          <div class="panel">
-            <p class="title">{{item['标题']}}</p>
-            <p>{{item['子标题']}}</p>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
   <!-- main部分 -->
-  <div class="main-product">
+  <div class="main-newsdate">
     <div class="layui-container">
-      <p class="title">{{data['主页']['主体']['产品']['标题']|safe}}</p>
-      <div class="layui-row layui-col-space25">
-        {% for item in data['主页']['主体']['产品']['内容'] %}
-        <div class="layui-col-sm6 layui-col-md3">
-          <div class="content">
-            <div><img src="{{item['图片']}}"></div>
-            <div>
-              <p class="label">{{item['标题']}}</p>
-              <p>{{item["详情"]}}</p>
-            </div>
-            <a href="{{item['链接']}}">查看产品 ></a>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-  <div class="main-service">
-    <div class="layui-container">
-      <p class="title">{{data['主页']['主体']['服务']['标题']|safe}}</p>
-      <div class="layui-row layui-col-space25 layui-col-space80">
-        {% for item in data['主页']['主体']['服务']['内容'] %}
-        <div class="layui-col-sm6">
-          <div class="content">
-            <div class="content-left"><img src="{{item['图片']}}"></div>
-            <div class="content-right">
-              <p class="label">{{item['标题']}}</p>
-              <span></span>
-              <p>{{item["详情"]}}</p>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      <div class="service-more"><a href="{{data['主页']['主体']['服务']['更多链接']}}">查看更多</a></div>
-    </div>
+      <p class="news"><a href="news.html">实时新闻</a> > 新闻详情</p>
+      <h1>{{news['标题']}}</h1>
+      <p class="pushtime">发布时间：<span>{{news['时间']}}</span></p>
+      <p class="introTop">{{news['概要']}}</p>
+      <div><img src="{{news['图片']}}" alt="新闻详情图"></div>
+      <p class="introBott">{{news['内容']}}</p>
+    </div> 
   </div>
   <!-- footer部分 -->
   <div class="footer">
@@ -112,15 +67,16 @@
       </div>
     </div>
   </div>
-<script src="../res/layui/layui.js"></script>
+<script src="res/layui/layui.js"></script>
 <!--[if lt IE 9]>
   <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
   <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
 <![endif]-->
 <script>
   layui.config({
-    base: '../res/static/js/' 
+    base: 'res/static/js/'
   }).use('firm'); 
 </script>
+
 </body>
 </html>

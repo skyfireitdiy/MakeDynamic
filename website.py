@@ -2,26 +2,48 @@ from flask import *
 from config import global_data
 import os
 
-website_blueprint = Blueprint("/", __name__, static_folder="./www", template_folder="./www", static_url_path="/")
+website_blueprint = Blueprint("/", __name__, static_folder="./www/static", template_folder="./www/template",
+                              static_url_path="/")
 
 
 @website_blueprint.route("/")
-@website_blueprint.route("/html/")
 def root():
-    return redirect("/html/index.html")
+    return redirect("/index.html")
 
 
-@website_blueprint.route("/<path:root_path>/<path:url_path>")
-def url(root_path: str, url_path: str):
-    template_path = os.path.join("./www", root_path, url_path)
-    if os.path.exists(template_path):
-        return render_template(os.path.join(root_path, url_path).replace('\\', '/'), data=global_data.config)
-    abort(404)
+@website_blueprint.route("/index.html")
+def index():
+    return render_template("index.html", data=global_data.config)
 
 
-@website_blueprint.route("/html/newsDetail.html")
+@website_blueprint.route("/about.html")
+def url():
+    return render_template("about.html", data=global_data.config)
+
+
+@website_blueprint.route("/case.html")
+def case():
+    return render_template("news.html", data=global_data.config)
+
+
+@website_blueprint.route("/news.html")
+def news():
+    return render_template("about.html", data=global_data.config)
+
+
+@website_blueprint.route("/product.html")
+def product():
+    return render_template("product.html", data=global_data.config)
+
+
+@website_blueprint.route("/index.css")
+def index_css():
+    return Response(render_template("index.css", data=global_data.config), mimetype='text/css')
+
+
+@website_blueprint.route("newsDetail.html")
 def news_detail():
     index = request.args.get("index", None)
     if index is None:
         abort(404)
-    return render_template("html/newsDetail.html", data=global_data.config, news=global_data.config['动态']['新闻'][int(index)])
+    return render_template("newsDetail.html", data=global_data.config, news=global_data.config['动态']['新闻'][int(index)])

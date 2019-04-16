@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
-  <title>{{data['案例']['标题']}}</title>
-  <link rel="stylesheet" href="../res/layui/css/layui.css">
-  <link rel="stylesheet" href="../res/static/css/index.css">
+  <title>{{data['动态']['标题']}}</title>
+  <link rel="stylesheet" href="res/layui/css/layui.css">
+  <link rel="stylesheet" href="index.css">
 </head>
 <body>
   <!-- nav部分 -->
@@ -23,33 +23,37 @@
         </button>
         <ul class="layui-nav" lay-filter="">
           <li class="layui-nav-item"><a href="product.html">产品</a></li>
-          <li class="layui-nav-item"><a href="news.html">动态</a></li>
-          <li class="layui-nav-item layui-this"><a href="case.html">案例</a></li>
+          <li class="layui-nav-item layui-this"><a href="news.html">动态</a></li>
+          <li class="layui-nav-item"><a href="case.html">案例</a></li>
           <li class="layui-nav-item"><a href="about.html">关于</a></li>
         </ul>
       </div>
     </div>
   </div>
   <!-- banner部分 -->
-  <div class="banner case">
+  <div class="banner news">
     <div class="title">
-      <p>成功案例</p>
-      <p class="en">Successful Case</p>
+      <p>实时新闻</p>
+      <p class="en">Real-time News</p>
     </div>
   </div>
-  <!-- main部分 -->
-  <div class="main-case">
+  <!-- main -->
+  <div class="main-news">
     <div class="layui-container">
-      <div class="layui-row">
-        {% for item in data['案例']['内容'] %}
-        <div class="layui-inline content">
-          <div class="layui-inline case-img"><img src="{{item['图片']}}"></div>
-          <p class="lable">{{item['名称']}}</p>
-          <p>item['介绍']</p>
+      <div class="layui-row layui-col-space20">
+        {% for i in data['动态']['新闻']|length|range %}
+        <div class="layui-col-lg6 content">
+          <div>
+            <div class="news-img"><a href="newsDetail.html?index={{i}}"><img src="{{data['动态']['新闻'][i]['图片']}}"></a></div><div class="news-panel">
+              <strong><a href="newsDetail.html?index={{i}}">{{data['动态']['新闻'][i]['标题']}}</a></strong>
+              <p class="detail"><span>{{data['动态']['新闻'][i]['概要']}}</span><a href="newsDetail.html?index={{i}}">[详细]</a></p>
+              <p class="read-push">发布时间：<span>{{data['动态']['新闻'][i]['时间']}}</span></p>
+            </div>
+          </div>
         </div>
         {% endfor %}
       </div>
-      <div id="casePage"></div>
+      <div id="newsPage"></div>
     </div>
   </div>
   <!-- footer部分 -->
@@ -78,15 +82,16 @@
       </div>
     </div>
   </div>
-<script src="../res/layui/layui.js"></script>
+<script src="res/layui/layui.js"></script>
 <!--[if lt IE 9]>
   <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
   <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
 <![endif]-->
 <script>
   layui.config({
-    base: '../res/static/js/' 
+    base: 'res/static/js/'
   }).use('firm'); 
 </script>
+
 </body>
 </html>
