@@ -19,11 +19,11 @@ def get_file_list(root):
 
 
 @admin_blueprint.route("/")
-@admin_blueprint.route("/index.html")
+@admin_blueprint.route("/admin.html")
 @login_required
 def admin_root():
     config = global_config.config
-    return render_template("index.html",
+    return render_template("admin.html",
                            type_data=global_data.config,
                            title=config["title"],
                            dev=current_user.dev,
@@ -59,6 +59,19 @@ def on_add_data():
     elif data["src_type"] == "Object":
         v[data["key"]] = value
     global_data.save()
+    return json.dumps({"code": 0})
+
+
+@admin_blueprint.route("/copy_data", methods=["POST"])
+@login_required
+def on_copy_data():
+    if not current_user.dev:
+        abort(403)
+    data = json.loads(request.form["data"])
+    v = global_data.config
+    for k in data["stack"]:
+        v = v[k]
+    v.append(json.loads(json.dumps(v[len(v)-1])))
     return json.dumps({"code": 0})
 
 

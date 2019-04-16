@@ -74,6 +74,7 @@
                        @data_change="on_data_change($event)"
                        @delete_data="on_delete_data($event)"
                        @add_new_data="on_add_new_data($event)"
+                       @copy_new_data="on_copy_new_data($event)"
                        :dev="dev">
             </data_form>
             <div v-show="page_type==='base'"  style="text-align: center;">
@@ -420,6 +421,12 @@
                         return obj;
                     },
 
+                    copy_new: function(){
+                        this.$emit("copy_new_data", {
+                            stack: this.stack
+                        });
+                    },
+
                     add_new: function () {
                         let _this = this;
 
@@ -501,7 +508,7 @@
                                   <!--<i class="layui-icon layui-colla-icon">[[ expand?"":"" ]]</i>-->
                               </span>
                             </h2>
-                            <div class="layui-colla-content layui-show">
+                            <div class="layui-colla-content">
                                 <div v-if="get_data_type(current_data) == 'Object' || get_data_type(current_data) == 'Array'">
                                     <table class="layui-table" lay-size="sm">
                                         <colgroup>
@@ -523,12 +530,13 @@
                                                 <data_form :current_data=value :stack="add_item_to_array(stack, key)"
                                                            @data_change="$emit('data_change', $event);"
                                                            @delete_data="$emit('delete_data', $event)"
-                                                           @add_new_data="$emit('add_new_data', $event)" :dev="dev"></data_form>
+                                                           @add_new_data="$emit('add_new_data', $event)"
+                                                           @copy_new_data="$emit('copy_new_data', $event)" :dev="dev"></data_form>
                                             </td>
                                             <td>
                                                 <button @click="$emit('delete_data', {stack:stack, index:key})" v-if="dev"
                                                     class="layui-btn layui-btn-danger layui-btn-sm">
-                                                    <i class="layui-icon" title="删除"></i>
+                                                    <i class="layui-icon" title="删除">删除</i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -541,7 +549,9 @@
                                         </div>
                                         <div class="layui-input-inline">
                                             <button @click="add_new" class="layui-btn layui-btn-sm" v-if="dev">
-                                            <i class="layui-icon" title="新增"></i></button>
+                                            <i class="layui-icon" title="新增">新增</i></button>
+                                            <button @click="copy_new" class="layui-btn layui-btn-sm" v-if="dev && get_data_type(current_data) == 'Array'" v-show="current_data.length !== 0">
+                                            <i class="layui-icon" title="复制">复制</i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -549,7 +559,7 @@
                                     <div class="layui-form-item layui-form-text">
                                         <div class="layui-input-block layui-inline">
                                             <input type="text" v-model="tmp_value" autocomplete="off" placeholder="请输入内容"
-                                                   class="layui-input layui-input-inline">
+                                                   class="layui-input layui-input-inline" :class="{'layui-bg-orange':tmp_value !== current_data}">
                                             <button class="layui-btn layui-btn-radius layui-btn-sm" @click="multiline_edit">多行编辑</button>
                                             <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">
                                                 确认修改
@@ -561,7 +571,7 @@
                                     <div class="layui-form-item layui-form-text">
                                         <div class="layui-input-inline">
                                             <input type="number" name="phone" lay-verify="required|number" placeholder="请输入数字"
-                                                   autocomplete="off" class="layui-input layui-input-inline" v-model="tmp_value">
+                                                   autocomplete="off" class="layui-input layui-input-inline" v-model="tmp_value" :class="{'layui-bg-orange':0 - tmp_value !== 0 - current_data}">
                                             <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">确认修改</button>
                                         </div>
                                     </div>
@@ -640,7 +650,6 @@
                                 if (result.code === 0) {
                                     _this.dev = true;
                                     layer.msg("打开开发者模式成功", {icon: 1});
-                                    _this.page_type = 'dev';
                                 } else {
                                     layer.msg("打开开发者模式失败：" + result.msg, {icon: 2});
                                 }
@@ -798,6 +807,28 @@
                         })
                     });
                 },
+                on_copy_new_data: function(data){
+                    let _this = this;
+
+                    $.post("copy_data", {data:JSON.stringify(data)}, function(res){
+                        let result = JSON.parse(res);
+                        if(result.code === 0){
+                            let v = _this.type_data;
+                            for (let key of data.stack) {
+                                v = v[key];
+                            }
+                            v.push(JSON.parse(JSON.stringify(v[v.length-1])));
+                            layer.msg("复制成功", {icon:1});
+                            Vue.nextTick(function(){
+                                element.init();
+                            });
+                        } else {
+                            layer.msg("复制失败：" + result.msg, {icon:2});
+                        }
+                    }).fail(function(){
+                        layer.msg("复制失败", {icon:2});
+                    });
+                },
                 on_add_new_data: function (data) {
                     let _this = this;
                     layui.use(["jquery", "layer"], function () {
@@ -860,6 +891,9 @@
                                 }
                                 Vue.set(v, key, data.value);
                                 layer.msg('更新成功', {icon: 1});
+                                Vue.nextTick(function(){
+                                    element.init();
+                                });
                             }).fail(function (res) {
                                 layer.msg('更新失败', {icon: 2});
                             });
@@ -890,6 +924,9 @@
                                 }
                                 Vue.delete(v, data.index);
                                 layer.msg('删除成功', {icon: 1});
+                                Vue.nextTick(function(){
+                                    element.init();
+                                });
                             }).fail(function () {
                                 layer.msg('删除失败', {icon: 2});
                             })

@@ -12,9 +12,6 @@ class Config:
         with open(self.filename, "w") as fp:
             fp.write(json.dumps(self.config, indent=4))
 
-    def get_config(self):
-        return self.config
-
 
 global_config = Config("config.json")
 global_data = Config("data.json")

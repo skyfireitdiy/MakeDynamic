@@ -22,6 +22,13 @@ login_manager.init_app(app=app)
 csrf.init_app(app)
 
 
+def template_range(i, *args, **kwargs):
+    return range(i, *args, **kwargs)[:]
+
+
+app.add_template_filter(template_range, "range")
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return AdminUser.get(user_id)
