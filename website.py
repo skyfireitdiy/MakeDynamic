@@ -1,6 +1,5 @@
 from flask import *
 from config import global_data
-import os
 
 website_blueprint = Blueprint("/", __name__, static_folder="./www/static", template_folder="./www/template",
                               static_url_path="/")

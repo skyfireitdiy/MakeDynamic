@@ -794,7 +794,7 @@
                     layui.use(["layer","jquery"], function () {
                         let layer = layui.layer;
                         let $ = layui.jquery;
-                        layer.confirm("确认将后台管理标题修改为\"" + _this.title + "\",版权信息修改为\"" + _this.footer + "\"?",{
+                        layer.confirm("确认将后台管理标题修改为\"" + _this.tmp_title + "\",版权信息修改为\"" + _this.tmp_footer + "\"?",{
                             btn: ["确认", "取消"]
                         }, function () {
                             $.post("change_base_info", {title:_this.tmp_title, footer: _this.tmp_footer}, function () {
