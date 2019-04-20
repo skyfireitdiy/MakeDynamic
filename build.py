@@ -24,6 +24,7 @@ def main():
     parse.add_argument("-f", "--file", help="General files directory", required=False, dest="file")
     parse.add_argument("-N", "--port", help="Server port", required=False, default="8080", dest="port")
     parse.add_argument("-j", "--jsondata", help="Data file with json", required=False, dest="data")
+    parse.add_argument("-a", "--article_image", hrlp="Article images directory", required=False, data="article_folder")
 
     args = parse.parse_args()
     if not os.path.exists(args.directory) and os.makedirs(args.directory, exist_ok=True):
@@ -58,11 +59,14 @@ def main():
         shutil.copytree(args.video, os.path.join(project_path, "file/video_data"))
     if args.image is not None:
         shutil.copytree(args.image, os.path.join(project_path, "file/image_data"))
+    if args.article_folder is not None:
+        shutil.copytree(args.article_folder, os.path.join(project_path, "file/article_image"))
 
     os.makedirs(os.path.join(project_path, "file/file_data"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "file/image_data"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "file/music_data"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "file/video_data"), exist_ok=True)
+    os.makedirs(os.path.join(project_path, "file/article_image"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/static"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/template"), exist_ok=True)
 
