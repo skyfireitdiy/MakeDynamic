@@ -10,7 +10,8 @@ from admin_user import admin_user
 from config import global_config, global_data
 from md_utils import *
 
-admin_blueprint = Blueprint("admin", __name__, static_folder="./admin", static_url_path="/", template_folder="./admin")
+admin_blueprint = Blueprint("admin", __name__, static_folder="./admin/static", static_url_path="/",
+                            template_folder="./admin/template")
 
 
 def get_file_list(root):
@@ -71,7 +72,7 @@ def on_copy_data():
     v = global_data.config
     for k in data["stack"]:
         v = v[k]
-    v.append(json.loads(json.dumps(v[len(v)-1])))
+    v.append(json.loads(json.dumps(v[len(v) - 1])))
     return json.dumps({"code": 0})
 
 
@@ -128,7 +129,8 @@ def login():
     if not user.verify_password(user_name, password):
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
-        return json.dumps(dict(code=1, msg="用户名或密码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+        return json.dumps(
+            dict(code=1, msg="用户名或密码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
     elif captcha.lower() != session["captcha"].lower():
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
@@ -143,7 +145,7 @@ def login():
 def get_new_captcha():
     cap_str, cap_img = make_captcha()
     session["captcha"] = cap_str
-    return json.dumps(dict(code=0,  new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+    return json.dumps(dict(code=0, new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
 
 
 @admin_blueprint.route('/logout')
@@ -218,6 +220,22 @@ def upload_image():
         file_name = os.path.join("file", "image_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
     return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+
+
+@admin_blueprint.route("article_image", methods=["POST"])
+@login_required
+def on_article_image():
+    if "file" not in request.files:
+        return json.dumps(dict(uploaded=False, url=""))
+    f = request.files["file"]
+    se_filename = my_secure_filename(f.filename)
+    if not valid_image_ext(se_filename):
+        return json.dumps(dict(uploaded=False, url=""))
+    file_name = os.path.join("file", "article_image_data", se_filename)
+    if os.path.exists(file_name):
+        file_name = os.path.join("file", "article_image_data", uuid.uuid4().hex + "_" + se_filename)
+    f.save(file_name)
+    return json.dumps(dict(uploaded=True, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_music", methods=["POST"])

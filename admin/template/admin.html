@@ -320,12 +320,19 @@
     <div class="layui-footer" style="text-align: center">
         [[ footer ]]
     </div>
-
 </div>
+
+<textarea id="rich_edit" name="content" lay-ignore="true">
+</textarea>
+
 
 <script src="vue.js"></script>
 <script src="layui/layui.all.js" charset="utf-8"></script>
 <script src="md5.js"></script>
+
+<script src="classic/ckeditor.js"></script>
+
+
 
 <script>
 
@@ -349,6 +356,67 @@
 
 
 
+        class MyUploadAdapter {
+            constructor( loader ) {
+                this.loader = loader;
+                this.url = 'article_image';
+            }
+
+            upload() {
+                return this.loader.file
+                    .then( file => new Promise((resolve, reject) => {
+                        this._initRequest();
+                        this._initListeners( resolve, reject, file );
+                        this._sendRequest( file );
+                    }));
+            }
+
+            abort() {
+                if ( this.xhr ) {
+                    this.xhr.abort();
+                }
+            }
+
+            _initRequest() {
+                const xhr = this.xhr = new XMLHttpRequest();
+
+                xhr.open( 'POST', this.url, true );
+                xhr.responseType = 'json';
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+
+            _initListeners( resolve, reject, file ) {
+                const xhr = this.xhr;
+                const genericErrorText = 'Couldn\'t upload file:' + ` ${ file.name }.`;
+
+                xhr.addEventListener( 'error', () => reject( genericErrorText ) );
+                xhr.addEventListener( 'abort', () => reject() );
+                xhr.addEventListener( 'load', () => {
+                    const response = xhr.response;
+                    if ( !response || response.error ) {
+                        return reject( response && response.error ? response.error.message : genericErrorText );
+                    }
+                    resolve( {
+                        default: response.url
+                    } );
+                } );
+            }
+
+            _sendRequest(file) {
+                const data = new FormData();
+                data.append( 'file', file );
+                this.xhr.send( data );
+            }
+        }
+
+
+        function MyCustomUploadAdapterPlugin( editor ) {
+            editor.plugins.get( 'FileRepository' ).createUploadAdapter = ( loader ) => {
+                return new MyUploadAdapter( loader );
+            };
+        }
+
+
         let data_form = Vue.component("data_form", {
                 name: "data_form",
                 props: ["current_data", "stack", "dev"],
@@ -366,19 +434,46 @@
                         let _this = this;
                         layer.prompt({
                             value: _this.tmp_value,
-                            title: _this.make_index_string(_this.stack),
+                            area: ["800px", "600px"],
+                            title: _this.index_string,
                             formType: 2
-                        }, function (value, index, elem) {
-                            layer.close(index);
+                        }, function (value, index, item) {
                             _this.tmp_value = value;
-                        });
+                            layer.close(index);
+                        })
                     },
-                    make_index_string: function (stack) {
-                        let ret = "data";
-                        for (let k of stack) {
-                            ret += "[" + this.to_string(k) + "]";
-                        }
-                        return ret;
+                    rich_edit: function(){
+                        let _this = this;
+                        $("#rich_edit").attr("hidden", false);
+
+                        let rich_editor = null;
+                        ClassicEditor
+                            .create( document.querySelector('#rich_edit'),{
+                                extraPlugins: [ MyCustomUploadAdapterPlugin ]
+                            })
+                            .then(editor=>{
+                                rich_editor = editor;
+                                rich_editor.setData(_this.tmp_value);
+                            })
+                            .catch( error => {
+                                console.error( error );
+                            });
+
+
+                        let rich_edit_layer = layer.open({
+                            type : 1,
+                            content: $("#rich_edit"),
+                            area:['800px','600px'],
+                            btn:["保存", "取消"],
+                            title: _this.index_string,
+                            yes: function () {
+                                _this.tmp_value = rich_editor.getData();
+                                layer.close(rich_edit_layer);
+                            },
+                            btn2: function () {
+                                layer.close(rich_edit_layer);
+                            }
+                        });
                     },
                     get_data_type: function (_data) {
                         if (_data === undefined) {
@@ -498,29 +593,42 @@
                         });
                     }
                 },
+            
+                computed: {
+                    current_data_type: function () {
+                        return this.get_data_type(this.current_data);
+                    },
+                    index_string: function () {
+                        let ret = "data";
+                        for (let k of this.stack) {
+                            ret += "[" + this.to_string(k) + "]";
+                        }
+                        return ret;
+                    }
+                },
 
                 template: `
                 <div class="layui-form layui-form-pane">
                     <div class="layui-collapse" lay-accordion="" lay-filter="test">
                         <div class="layui-colla-item">
                             <h2 class="layui-colla-title">
-                              <span>[[ make_index_string(stack) ]]
+                              <span>[[ index_string ]]
                                   <!--<i class="layui-icon layui-colla-icon">[[ expand?"":"" ]]</i>-->
                               </span>
                             </h2>
                             <div class="layui-colla-content">
-                                <div v-if="get_data_type(current_data) == 'Object' || get_data_type(current_data) == 'Array'">
+                                <div v-if="current_data_type == 'Object' || current_data_type == 'Array'">
                                     <table class="layui-table" lay-size="sm">
                                         <colgroup>
                                             <col width="100">
                                             <col>
-                                            <col width="50" v-if="dev">
+                                            <col width="50" v-if="dev || current_data_type == 'Array'">
                                         </colgroup>
                                         <thead>
                                         <tr>
                                             <th>索引</th>
                                             <th>值</th>
-                                            <th v-if="dev">操作</th>
+                                            <th v-if="dev || current_data_type == 'Array'">操作</th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -533,8 +641,8 @@
                                                            @add_new_data="$emit('add_new_data', $event)"
                                                            @copy_new_data="$emit('copy_new_data', $event)" :dev="dev"></data_form>
                                             </td>
-                                            <td>
-                                                <button @click="$emit('delete_data', {stack:stack, index:key})" v-if="dev"
+                                            <td v-if="dev || current_data_type == 'Array'">
+                                                <button @click="$emit('delete_data', {stack:stack, index:key})"
                                                     class="layui-btn layui-btn-danger layui-btn-sm">
                                                     <i class="layui-icon" title="删除">删除</i>
                                                 </button>
@@ -544,30 +652,31 @@
                                     </table>
                                     <div class="layui-inline">
                                         <div class="layui-input-inline">
-                                             <input type="text" v-if="dev && get_data_type(current_data) == 'Object'"
+                                             <input type="text" v-if="dev && current_data_type == 'Object'"
                                                                  v-model="new_key_name" placeholder="新属性名" class="layui-input">
                                         </div>
                                         <div class="layui-input-inline">
                                             <button @click="add_new" class="layui-btn layui-btn-sm" v-if="dev">
                                             <i class="layui-icon" title="新增">新增</i></button>
-                                            <button @click="copy_new" class="layui-btn layui-btn-sm" v-if="dev && get_data_type(current_data) == 'Array'" v-show="current_data.length !== 0">
+                                            <button @click="copy_new" class="layui-btn layui-btn-sm" v-if="current_data_type == 'Array'" v-show="current_data.length !== 0">
                                             <i class="layui-icon" title="复制">复制</i></button>
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else-if="get_data_type(current_data) == 'String'">
+                                <div v-else-if="current_data_type == 'String'">
                                     <div class="layui-form-item layui-form-text">
                                         <div class="layui-input-block layui-inline">
                                             <input type="text" v-model="tmp_value" autocomplete="off" placeholder="请输入内容"
                                                    class="layui-input layui-input-inline" :class="{'layui-bg-orange':tmp_value !== current_data}">
                                             <button class="layui-btn layui-btn-radius layui-btn-sm" @click="multiline_edit">多行编辑</button>
+                                            <button class="layui-btn layui-btn-radius layui-btn-sm layui-btn-warm" @click="rich_edit">富文本编辑</button>
                                             <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">
                                                 确认修改
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else-if="get_data_type(current_data) == 'Number'">
+                                <div v-else-if="current_data_type == 'Number'">
                                     <div class="layui-form-item layui-form-text">
                                         <div class="layui-input-inline">
                                             <input type="number" name="phone" lay-verify="required|number" placeholder="请输入数字"
@@ -880,7 +989,7 @@
                             v = v[key];
                         }
                         let key = data.stack[data.stack.length - 1];
-                        layer.confirm("确认将值 " + v[key] + " 更新为 " + data.value + " ?", {
+                        layer.confirm("确认修改 ?", {
                             btn: ['确认', '取消'] //按钮
                         }, function () {
                             $.post("data_change", {"data": JSON.stringify(data)}, function (res) {
