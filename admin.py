@@ -9,6 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from admin_user import admin_user
 from config import global_config, global_data
 from md_utils import *
+from file import make_thumbnail
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin/static", static_url_path="/",
                             template_folder="./admin/template")
@@ -17,6 +18,13 @@ admin_blueprint = Blueprint("admin", __name__, static_folder="./admin/static", s
 def get_file_list(root):
     url_list = os.listdir(os.path.join("file", root))
     return [{"url": os.path.join("/file", root, url).replace('\\', '/')} for url in url_list]
+
+
+def get_image_list():
+    url_list = os.listdir(os.path.join("file", "image_data"))
+    return [{"url": os.path.join("/file", "image_data", url).replace('\\', '/'),
+             "thumbnail": os.path.join("/file", "thumbnail_data", url).replace('\\', '/'),
+             "name": url} for url in url_list]
 
 
 @admin_blueprint.route("/")
@@ -33,7 +41,7 @@ def admin_root():
                            user_img=config["user"]["img"],
                            file_data=get_file_list("file_data"),
                            music_data=get_file_list("music_data"),
-                           image_data=get_file_list("image_data"),
+                           image_data=get_image_list(),
                            video_data=get_file_list("video_data"),
                            )
 
@@ -192,6 +200,16 @@ def delete_file():
     return json.dumps(dict(code=0))
 
 
+@admin_blueprint.route("delete_image", methods=["POST"])
+@login_required
+def delete_image():
+    image_file_name = os.path.join("file", "image_data", my_secure_filename(request.form["name"]))
+    thumbnail_file_name = os.path.join("file", "thumbnail_data", my_secure_filename(request.form["name"]))
+    os.remove(image_file_name)
+    os.remove(thumbnail_file_name)
+    return json.dumps(dict(code=0))
+
+
 @admin_blueprint.route("upload_file", methods=["POST"])
 @login_required
 def upload_file():
@@ -217,9 +235,12 @@ def upload_image():
         return json.dumps(dict(code=2, msg="图片上传仅支持jpg, jpeg, png, gif格式"))
     file_name = os.path.join("file", "image_data", se_filename)
     if os.path.exists(file_name):
-        file_name = os.path.join("file", "image_data", uuid.uuid4().hex + "_" + se_filename)
+        se_filename = uuid.uuid4().hex + "_" + se_filename
+        file_name = os.path.join("file", "image_data", se_filename)
     f.save(file_name)
-    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    thumbnail = make_thumbnail(se_filename, True)
+    return json.dumps(
+        dict(code=0, url=os.path.join("/", file_name.replace('\\', '/')), thumbnail=thumbnail, name=se_filename))
 
 
 @admin_blueprint.route("article_image", methods=["POST"])

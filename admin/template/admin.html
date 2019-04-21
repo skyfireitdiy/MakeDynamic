@@ -183,10 +183,10 @@
                         <tr v-for="item in image_data">
                             <td>[[item.url]]</td>
                             <td style="text-align: center">
-                                <img @click="show_image(item.url)" style="border-width: 1px" width="40px" height="40px" :src="item.url">
+                                <img @click="show_image(item.url)" style="border-width: 1px" width="40px" height="40px" :src="item.thumbnail">
                             </td>
                             <td>
-                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(image_data,item.url)">删除</button>
+                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_image(item.name)">删除</button>
                             </td>
                         </tr>
                     </tbody>
@@ -329,7 +329,6 @@
 <script src="vue.js"></script>
 <script src="layui/layui.all.js" charset="utf-8"></script>
 <script src="md5.js"></script>
-
 <script src="classic/ckeditor.js"></script>
 
 
@@ -344,7 +343,11 @@
         let layer = layui.layer;
         let upload = layui.upload;
 
+
         let csrf_token = "{{ csrf_token() }}";
+
+
+
 
         $.ajaxSetup({
             beforeSend: function (xhr, settings) {
@@ -805,6 +808,7 @@
                     });
                 },
                 show_image: function(url){
+
                     layer.photos({
                         photos:{
                             data:[
@@ -815,8 +819,34 @@
                         }
                     });
                 },
-                delete_file: function(data_src ,file_url){
+
+                delete_image: function(file_name){
                     let _this = this;
+                    layer.confirm("确认删除文件:"+file_name+"?",{
+                        btn:["确认","取消"]
+                    }, function () {
+                        $.post("delete_image", {name:file_name}, function (res) {
+                            let result = JSON.parse(res);
+                            if(result.code === 0){
+                                layer.msg("删除成功", {icon:1});
+                                for(let i in _this.image_data){
+                                    if(_this.image_data[i].name === file_name)
+                                    {
+                                        Vue.delete(_this.image_data, i);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                layer.msg("删除失败：" + result.msg, {icon:2});
+                            }
+                        }).fail(function () {
+                            layer.msg("删除失败", {icon:2});
+                        });
+                    }, function () {
+
+                    });
+                },
+                delete_file: function(data_src ,file_url){
                     layer.confirm("确认删除文件:"+file_url+"?",{
                         btn:["确认","取消"]
                     }, function () {
@@ -1093,7 +1123,7 @@
                 layer.close(load_index);
                 if(res.code === 0){
                     layer.msg('图片上传成功，文件url:' + res.url, {icon:1});
-                    app.$data.image_data.push({url:res.url});
+                    app.$data.image_data.push({url:res.url, name:res.name, thumbnail:res.thumbnail});
                 } else{
                     layer.msg("上传失败："+ res.msg, {icon:2});
                 }
