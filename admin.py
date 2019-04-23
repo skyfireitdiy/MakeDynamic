@@ -43,6 +43,7 @@ def admin_root():
                            music_data=get_file_list("music_data"),
                            image_data=get_image_list(),
                            video_data=get_file_list("video_data"),
+                           add_type_sel_list=global_config.config["add_type_sel_list"]
                            )
 
 
@@ -55,20 +56,13 @@ def on_add_data():
     v = global_data.config
     for k in data["stack"]:
         v = v[k]
-    if data["item_type"] == "Number":
-        value = 0
-    elif data["item_type"] == "String":
-        value = ""
-    elif data["item_type"] == "Array":
-        value = []
-    else:
-        value = {}
+    value = json.loads(json.dumps(global_config.config["add_type_sel_list"][data["item_type"]]))
     if data["src_type"] == "Array":
         v.append(value)
     elif data["src_type"] == "Object":
         v[data["key"]] = value
     global_data.save()
-    return json.dumps({"code": 0})
+    return json.dumps({"code": 0, "data": value})
 
 
 @admin_blueprint.route("/copy_data", methods=["POST"])

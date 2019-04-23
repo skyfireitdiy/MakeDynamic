@@ -101,7 +101,13 @@ def %s():
             img=""
         ),
         dev_ps=generate_password_hash(hashlib.md5(args.dev.encode("utf-8")).hexdigest()),
-        port=int(args.port)
+        port=int(args.port),
+        add_type_sel_list={
+            "Number": 0,
+            "Array": [],
+            "Object": {},
+            "String": ""
+        }
     )
 
     with open(os.path.join(project_path, "config.json"), 'w') as fp:

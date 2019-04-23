@@ -7,5 +7,11 @@
         "img": "/file/image_data/\u5934\u50cf.png"
     },
     "dev_ps": "pbkdf2:sha256:150000$v657ytML$1d22f6d84e7d444cc45e641df5d0eaa8f2e8d426146c244ced45a12ff697c20d",
-    "port": 8080
+    "port": 8080,
+    "add_type_sel_list": {
+        "Number": 0,
+        "Array": [],
+        "Object": {},
+        "String": ""
+    }
 }

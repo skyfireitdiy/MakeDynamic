@@ -70,7 +70,7 @@
     <div class="layui-body">
         <!-- 内容主体区域 -->
         <div style="padding: 0px;">
-            <data_form v-show="page_type==='data'" :current_data="type_data" :stack="[]"
+            <data_form v-show="page_type==='data'" :current_data="type_data" :stack="[]" :add_type_sel_list="add_type_sel_list"
                        @data_change="on_data_change($event)"
                        @delete_data="on_delete_data($event)"
                        @add_new_data="on_add_new_data($event)"
@@ -322,8 +322,8 @@
     </div>
 </div>
 
-<textarea id="rich_edit" name="content" lay-ignore="true">
-</textarea>
+<div id="rich_edit" name="content" lay-ignore="true">
+</div>
 
 
 <script src="vue.js"></script>
@@ -346,7 +346,7 @@
 
         let csrf_token = "{{ csrf_token() }}";
 
-
+        $("#rich_edit").hide();
 
 
         $.ajaxSetup({
@@ -422,7 +422,7 @@
 
         let data_form = Vue.component("data_form", {
                 name: "data_form",
-                props: ["current_data", "stack", "dev"],
+                props: ["current_data", "stack", "dev", "add_type_sel_list"],
                 delimiters: ["[[", "]]"],
                 data: function () {
                     return {
@@ -430,6 +430,7 @@
                         expand: false,
                         new_key_name: "",
                         new_type: "Number",
+                        add_type_sel: "Number"
                     }
                 },
                 methods: {
@@ -447,7 +448,7 @@
                     },
                     rich_edit: function(){
                         let _this = this;
-                        $("#rich_edit").attr("hidden", false);
+                        $("#rich_edit").show();
 
                         let rich_editor = null;
                         ClassicEditor
@@ -475,6 +476,10 @@
                             },
                             btn2: function () {
                                 layer.close(rich_edit_layer);
+                            },
+                            end: function(){
+                                $("#rich_edit").hide();
+                                $(".ck").remove();
                             }
                         });
                     },
@@ -527,73 +532,33 @@
 
                     add_new: function () {
                         let _this = this;
-
-                        let _add_new = function(){
-                            if (_this.get_data_type(_this.current_data) === "Array") {
+                        if (_this.get_data_type(_this.current_data) === "Array") {
+                            _this.$emit("add_new_data", {
+                                src_type: "Array",
+                                key: _this.new_key_name,
+                                item_type: _this.new_type,
+                                stack: _this.stack
+                            });
+                        } else if (_this.get_data_type(_this.current_data) === "Object") {
+                            if (_this.new_key_name.length === 0) {
+                                layui.use("layer", function () {
+                                    let layer = layui.layer;
+                                    layer.msg("请先输入属性名称！", {icon: 2});
+                                })
+                            } else if (_this.current_data[_this.new_key_name] !== undefined) {
+                                layui.use("layer", function () {
+                                    let layer = layui.layer;
+                                    layer.msg("属性" + _this.new_key_name + "已存在，请使用其他属性名称", {icon: 2});
+                                })
+                            } else {
                                 _this.$emit("add_new_data", {
-                                    src_type: "Array",
+                                    src_type: "Object",
                                     key: _this.new_key_name,
                                     item_type: _this.new_type,
                                     stack: _this.stack
                                 });
-                            } else if (_this.get_data_type(_this.current_data) === "Object") {
-                                if (_this.new_key_name.length === 0) {
-                                    layui.use("layer", function () {
-                                        let layer = layui.layer;
-                                        layer.msg("请先输入属性名称！", {icon: 2});
-                                    })
-                                } else if (_this.current_data[_this.new_key_name] !== undefined) {
-                                    layui.use("layer", function () {
-                                        let layer = layui.layer;
-                                        layer.msg("属性" + _this.new_key_name + "已存在，请使用其他属性名称", {icon: 2});
-                                    })
-                                } else {
-                                    _this.$emit("add_new_data", {
-                                        src_type: "Object",
-                                        key: _this.new_key_name,
-                                        item_type: _this.new_type,
-                                        stack: _this.stack
-                                    });
-                                }
                             }
-                        };
-
-                        layui.use("layer", function () {
-                            let layer = layui.layer;
-                            layer.open({
-                                type: 1
-                                ,title: "请选择要添加的类型"
-                                ,area: ['450px', '120px']
-                                ,shade: 0
-                                ,maxmin: false
-                                ,content: ''
-                                ,btn: ['取消','数字', '字符串', '数组', '对象']
-                                ,btn2: function(){
-                                    _this.new_type = "Number";
-                                    _add_new();
-                                }
-                                ,btn3: function(){
-                                    _this.new_type = "String";
-                                    _add_new();
-                                }
-                                ,btn4: function(){
-                                    _this.new_type = "Array";
-                                    _add_new();
-                                }
-                                , btn5: function () {
-                                    _this.new_type = "Object";
-                                    _add_new();
-                                }
-                                , yes: function () {
-                                    layer.closeAll();
-                                }
-                                ,btnAlign: 'c'
-                                ,zIndex: layer.zIndex //重点1
-                                ,success: function(layero){
-                                    layer.setTop(layero); //重点2
-                                }
-                            });
-                        });
+                        }
                     }
                 },
             
@@ -638,7 +603,7 @@
                                         <tr v-for="(value,key) in current_data">
                                             <td>[[ key ]]</td>
                                             <td>
-                                                <data_form :current_data=value :stack="add_item_to_array(stack, key)"
+                                                <data_form :current_data=value :stack="add_item_to_array(stack, key)" :add_type_sel_list="add_type_sel_list"
                                                            @data_change="$emit('data_change', $event);"
                                                            @delete_data="$emit('delete_data', $event)"
                                                            @add_new_data="$emit('add_new_data', $event)"
@@ -657,6 +622,11 @@
                                         <div class="layui-input-inline">
                                              <input type="text" v-if="dev && current_data_type == 'Object'"
                                                                  v-model="new_key_name" placeholder="新属性名" class="layui-input">
+                                        </div>
+                                        <div class="layui-inline">
+                                            <select v-model="new_type" class="layui-select" lay-ignore="true" v-if="dev">
+                                                <option v-for="(v,k) in add_type_sel_list">[[ k ]]</option>
+                                            </select>
                                         </div>
                                         <div class="layui-input-inline">
                                             <button @click="add_new" class="layui-btn layui-btn-sm" v-if="dev">
@@ -723,7 +693,8 @@
                 tmp_user_name: "{{user_name}}",
                 old_dev_ps:"",
                 new_dev_ps:"",
-                new_dev_ps2:""
+                new_dev_ps2:"",
+                add_type_sel_list:{{add_type_sel_list|tojson}}
             },
             delimiters: ["[[", "]]"],
             components: {
@@ -984,16 +955,7 @@
                             for (let key of data.stack) {
                                 v = v[key];
                             }
-                            let value = null;
-                            if (data.item_type === "Number") {
-                                value = 0;
-                            } else if (data.item_type === "String") {
-                                value = "";
-                            } else if (data.item_type === "Array") {
-                                value = [];
-                            } else {
-                                value = {};
-                            }
+                            let value = ret.data;
                             if (data.src_type === "Array") {
                                 v.push(value);
                             } else if (data.src_type === "Object") {
