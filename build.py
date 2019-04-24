@@ -70,6 +70,7 @@ def main():
     os.makedirs(os.path.join(project_path, "file/article_image"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/static"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/template"), exist_ok=True)
+    os.makedirs(os.path.join(project_path, "config"), exist_ok=True)
 
     website_content = '''
 from flask import *
