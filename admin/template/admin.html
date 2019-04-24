@@ -335,7 +335,6 @@
 
 <script>
 
-
     layui.use(["jquery", "element", "layer", "form", "upload"], function () {
         let $ = layui.jquery;
         let element = layui.element;
@@ -356,7 +355,6 @@
                 }
             }
         });
-
 
 
         class MyUploadAdapter {
@@ -420,6 +418,7 @@
         }
 
 
+
         let data_form = Vue.component("data_form", {
                 name: "data_form",
                 props: ["current_data", "stack", "dev", "add_type_sel_list"],
@@ -438,7 +437,7 @@
                         let _this = this;
                         layer.prompt({
                             value: _this.tmp_value,
-                            area: ["800px", "600px"],
+                            area: ["100%", "100%"],
                             title: _this.index_string,
                             formType: 2
                         }, function (value, index, item) {
@@ -453,7 +452,44 @@
                         let rich_editor = null;
                         ClassicEditor
                             .create( document.querySelector('#rich_edit'),{
-                                extraPlugins: [ MyCustomUploadAdapterPlugin ]
+                                extraPlugins: [ MyCustomUploadAdapterPlugin ],
+                                toolbar: {
+                                    items: [
+                                        "heading",
+                                        "|",
+                                        "alignment",
+                                        "imageStyle:full",
+                                        "imageStyle:side",
+                                        // "imageTextAlternative",
+                                        "bold",
+                                        "italic",
+                                        // "link",
+                                        // "bulletedList",
+                                        // "numberedList",
+                                        "imageUpload",
+                                        "blockQuote",
+                                        "insertTable",
+                                        "mediaEmbed",
+                                        "undo",
+                                        "redo"
+                                    ]
+                                },
+                                alignment: {
+                                    options: ["left", "right", "center", "justify"]
+                                },
+                                image: {
+                                    toolbar: [
+                                        "imageStyle:full",
+                                        "imageStyle:side",
+                                        "|",
+                                        "imageTextAlternative"
+                                    ]
+                                },
+                                table: {
+                                    contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"]
+                                },
+                                // This value must be kept in sync with the language defined in webpack.config.js.
+                                language: "zh-cn"
                             })
                             .then(editor=>{
                                 rich_editor = editor;
