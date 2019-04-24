@@ -105,17 +105,17 @@ def %s():
         port=int(args.port),
     )
 
-    with open(os.path.join(project_path, "config.json"), 'w') as fp:
+    with open(os.path.join(project_path, "config/config.json"), 'w') as fp:
         fp.write(json.dumps(config, indent=4))
     if args.json_data is not None:
-        shutil.copy(args.json_data, os.path.join(project_path, "data.json"))
+        shutil.copy(args.json_data, os.path.join(project_path, "config/data.json"))
     else:
-        with open(os.path.join(project_path, "data.json"), 'w') as fp:
+        with open(os.path.join(project_path, "config/data.json"), 'w') as fp:
             fp.write(json.dumps({}))
     if args.data_template is not None:
-        shutil.copy(args.data_template, os.path.join(project_path, "template.json"))
+        shutil.copy(args.data_template, os.path.join(project_path, "config/template.json"))
     else:
-        with open(os.path.join(project_path, "template.json"), "w") as fp:
+        with open(os.path.join(project_path, "config/template.json"), "w") as fp:
             fp.write(json.dumps({
                 "Number": 0,
                 "Array": [],

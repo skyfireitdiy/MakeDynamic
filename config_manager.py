@@ -13,9 +13,9 @@ class Config:
             fp.write(json.dumps(self.config, indent=4))
 
 
-global_config = Config("config.json")
-global_data = Config("data.json")
-global_template = Config("template.json")
+global_config = Config("config/config.json")
+global_data = Config("config/data.json")
+global_template = Config("config/template.json")
 
 
 def save_all_config():
