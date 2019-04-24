@@ -1880,7 +1880,7 @@
                 // if the user intentionally throws the original error in the handler,
                 // do not log it twice
                 if (e !== err) {
-                    logError(e, null, 'config.errorHandler');
+                    logError(e, null, 'config_manager.py.errorHandler');
                 }
             }
         }
@@ -7285,7 +7285,7 @@
         {
             // inputs with type="file" are read only and setting the input's
             // value will throw an error.
-            if (tag === 'input' && type === 'file') {
+            if (tag === 'input' && type === 'file_manager.py') {
                 warn$1(
                     "<" + (el.tag) + " v-model=\"" + value + "\" type=\"file\">:\n" +
                     "File inputs are read only. Use a v-on:change listener instead.",

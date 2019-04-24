@@ -11,26 +11,27 @@ from md_utils import my_secure_filename
 
 def main():
     parse = argparse.ArgumentParser()
-    parse.add_argument("-P", "--project", help="Project name", required=True, dest="project")
+    parse.add_argument("-P", "--project", help="Project name", required=True, dest="project_name")
     parse.add_argument("-D", "--directory", help="Output directory", dest="directory", required=True)
-    parse.add_argument("-n", "--name", default="admin", help="Admin user name", required=True, dest="name")
+    parse.add_argument("-n", "--name", default="admin", help="Admin user name", required=True, dest="admin_name")
     parse.add_argument("-p", "--password", help="Admin password", required=True, dest="password")
-    parse.add_argument("-d", "--dev", help="Develop password", required=True, dest="dev")
-    parse.add_argument("-t", "--template", help="Template file directory", required=False, dest="template")
-    parse.add_argument("-s", "--static", help="Static files directory", required=False, dest="static")
-    parse.add_argument("-v", "--video", help="Video files directory", required=False, dest="video")
-    parse.add_argument("-m", "--music", help="Music files directory", required=False, dest="music")
-    parse.add_argument("-i", "--image", help="Image files directory", required=False, dest="image")
-    parse.add_argument("-f", "--file", help="General files directory", required=False, dest="file")
+    parse.add_argument("-d", "--dev", help="Develop password", required=True, dest="dev_password")
+    parse.add_argument("-t", "--template_dir", help="Template file directory", required=False, dest="template_dir")
+    parse.add_argument("-s", "--static_dir", help="Static files directory", required=False, dest="static_dir")
+    parse.add_argument("-v", "--video", help="Video files directory", required=False, dest="video_dir")
+    parse.add_argument("-m", "--music", help="Music files directory", required=False, dest="music_dir")
+    parse.add_argument("-i", "--image", help="Image files directory", required=False, dest="image_dir")
+    parse.add_argument("-f", "--file", help="General files directory", required=False, dest="file_dir")
     parse.add_argument("-N", "--port", help="Server port", required=False, default="8080", dest="port")
-    parse.add_argument("-j", "--jsondata", help="Data file with json", required=False, dest="data")
-    parse.add_argument("-a", "--article_image", hrlp="Article images directory", required=False, data="article_folder")
+    parse.add_argument("-j", "--jsondata", help="Data file with json", required=False, dest="json_data")
+    parse.add_argument("-a", "--article_image", help="Article images directory", required=False, dest="article_folder")
+    parse.add_argument("-T", "--data_template", help="Data tempalte file", required=False, dest="data_template")
 
     args = parse.parse_args()
     if not os.path.exists(args.directory) and os.makedirs(args.directory, exist_ok=True):
         print("Directory not exists and create failed：", args.directory)
         return
-    project_path = os.path.join(args.directory, args.project)
+    project_path = os.path.join(args.directory, args.project_name)
     if not os.path.exists(project_path) and os.makedirs(project_path, exist_ok=True):
         print("Directory not exists and create failed：", project_path)
         return
@@ -40,25 +41,25 @@ def main():
 
     shutil.copytree("admin", os.path.join(project_path, "admin"))
     shutil.copy("admin.py", project_path)
-    shutil.copy("config.py", project_path)
-    shutil.copy("file.py", project_path)
+    shutil.copy("config_manager.py", project_path)
+    shutil.copy("file_manager.py", project_path)
     shutil.copy("md_utils.py", project_path)
     shutil.copy("website.py", project_path)
     shutil.copy("app.py", project_path)
     shutil.copy("admin_user.py", project_path)
 
-    if args.static is not None:
-        shutil.copytree(args.static, os.path.join(project_path, "www/static"))
-    if args.template is not None:
-        shutil.copytree(args.template, os.path.join(project_path, "www/template"))
-    if args.file is not None:
-        shutil.copytree(args.file, os.path.join(project_path, "file/file_data"))
-    if args.music is not None:
-        shutil.copytree(args.music, os.path.join(project_path, "file/music_data"))
-    if args.video is not None:
-        shutil.copytree(args.video, os.path.join(project_path, "file/video_data"))
-    if args.image is not None:
-        shutil.copytree(args.image, os.path.join(project_path, "file/image_data"))
+    if args.static_dir is not None:
+        shutil.copytree(args.static_dir, os.path.join(project_path, "www/static"))
+    if args.template_dir is not None:
+        shutil.copytree(args.template_dir, os.path.join(project_path, "www/template"))
+    if args.file_dir is not None:
+        shutil.copytree(args.file_dir, os.path.join(project_path, "file/file_data"))
+    if args.music_dir is not None:
+        shutil.copytree(args.music_dir, os.path.join(project_path, "file/music_data"))
+    if args.video_dir is not None:
+        shutil.copytree(args.video_dir, os.path.join(project_path, "file/video_data"))
+    if args.image_dir is not None:
+        shutil.copytree(args.image_dir, os.path.join(project_path, "file/image_data"))
     if args.article_folder is not None:
         shutil.copytree(args.article_folder, os.path.join(project_path, "file/article_image"))
 
@@ -96,27 +97,31 @@ def %s():
         title="",
         footer="",
         user=dict(
-            name=args.name,
+            name=args.admin_name,
             password=generate_password_hash(hashlib.md5(args.password.encode("utf-8")).hexdigest()),
             img=""
         ),
-        dev_ps=generate_password_hash(hashlib.md5(args.dev.encode("utf-8")).hexdigest()),
+        dev_ps=generate_password_hash(hashlib.md5(args.dev_password.encode("utf-8")).hexdigest()),
         port=int(args.port),
-        add_type_sel_list={
-            "Number": 0,
-            "Array": [],
-            "Object": {},
-            "String": ""
-        }
     )
 
     with open(os.path.join(project_path, "config.json"), 'w') as fp:
         fp.write(json.dumps(config, indent=4))
-    if args.data is not None:
-        shutil.copy(args.data, os.path.join(project_path, "data.json"))
+    if args.json_data is not None:
+        shutil.copy(args.json_data, os.path.join(project_path, "data.json"))
     else:
         with open(os.path.join(project_path, "data.json"), 'w') as fp:
             fp.write(json.dumps({}))
+    if args.data_template is not None:
+        shutil.copy(args.data_template, os.path.join(project_path, "template.json"))
+    else:
+        with open(os.path.join(project_path, "template.json"), "w") as fp:
+            fp.write(json.dumps({
+                "Number": 0,
+                "Array": [],
+                "Object": {},
+                "String": ""
+            }))
 
     print('''finished! Just run "cd %s && python.exe app.py"''' % project_path)
 

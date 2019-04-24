@@ -15,3 +15,10 @@ class Config:
 
 global_config = Config("config.json")
 global_data = Config("data.json")
+global_template = Config("template.json")
+
+
+def save_all_config():
+    global_config.save()
+    global_data.save()
+    global_template.save()

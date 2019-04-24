@@ -6,10 +6,10 @@ from flask_wtf.csrf import CSRFProtect
 
 from admin import admin_blueprint
 from admin_user import AdminUser
-from file import file_blueprint
+from file_manager import file_blueprint
 from website import website_blueprint
 
-from config import global_config
+from config_manager import global_config
 
 app = Flask(__name__)
 

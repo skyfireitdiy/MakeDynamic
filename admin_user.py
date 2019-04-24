@@ -1,7 +1,7 @@
 from werkzeug.security import check_password_hash
 from flask_login import UserMixin
 
-from config import global_config
+from config_manager import global_config
 
 
 class AdminUser(UserMixin):

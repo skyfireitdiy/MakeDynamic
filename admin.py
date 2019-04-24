@@ -7,9 +7,9 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from admin_user import admin_user
-from config import global_config, global_data
+from config_manager import global_config, global_data, global_template, save_all_config
+from file_manager import make_thumbnail
 from md_utils import *
-from file import make_thumbnail
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin/static", static_url_path="/",
                             template_folder="./admin/template")
@@ -43,64 +43,73 @@ def admin_root():
                            music_data=get_file_list("music_data"),
                            image_data=get_image_list(),
                            video_data=get_file_list("video_data"),
-                           add_type_sel_list=global_config.config["add_type_sel_list"]
+                           template=global_template.config
                            )
+
+
+@admin_blueprint.route("/to_template", methods=["POST"])
+@login_required
+def to_template():
+    data = json.loads(request.form["data"])
+    v = global_data.config
+    for k in data["stack"]:
+        v = v[k]
+    v = v[data["key"]]
+    tv = global_template.config
+    tv[data["t_name"]] = json.loads(json.dumps(v))
+    save_all_config()
+    return json.dumps({"code": 0, "data": v})
 
 
 @admin_blueprint.route("/add_data", methods=["POST"])
 @login_required
 def on_add_data():
-    if not current_user.dev:
-        abort(403)
     data = json.loads(request.form["data"])
-    v = global_data.config
+    co_type = request.form["co_type"]
+    if co_type == "data":
+        v = global_data.config
+    else:
+        v = global_template.config
     for k in data["stack"]:
         v = v[k]
-    value = json.loads(json.dumps(global_config.config["add_type_sel_list"][data["item_type"]]))
+    value = json.loads(json.dumps(global_template.config[data["item_type"]]))
     if data["src_type"] == "Array":
         v.append(value)
     elif data["src_type"] == "Object":
         v[data["key"]] = value
-    global_data.save()
+    save_all_config()
     return json.dumps({"code": 0, "data": value})
-
-
-@admin_blueprint.route("/copy_data", methods=["POST"])
-@login_required
-def on_copy_data():
-    if not current_user.dev:
-        abort(403)
-    data = json.loads(request.form["data"])
-    v = global_data.config
-    for k in data["stack"]:
-        v = v[k]
-    v.append(json.loads(json.dumps(v[len(v) - 1])))
-    return json.dumps({"code": 0})
 
 
 @admin_blueprint.route("/data_change", methods=["POST"])
 @login_required
 def on_data_change():
     data = json.loads(request.form["data"])
-    v = global_data.config
+    co_type = request.form["co_type"]
+    if co_type == "data":
+        v = global_data.config
+    else:
+        v = global_template.config
     for k in data["stack"][:-1]:
         v = v[k]
     v[data["stack"][len(data["stack"]) - 1]] = data["value"]
-    global_data.save()
+    save_all_config()
     return json.dumps({"code": 0})
 
 
 @admin_blueprint.route("/delete_data", methods=["POST"])
 @login_required
 def on_delete_data():
-    if not current_user.dev:
-        abort(403)
     data = json.loads(request.form["data"])
-    v = global_data.config
+    co_type = request.form["co_type"]
+    if co_type == "data":
+        v = global_data.config
+    else:
+        v = global_template.config
     for k in data["stack"]:
         v = v[k]
     del v[data["index"]]
-    global_data.save()
+    save_all_config()
     return json.dumps({"code": 0})
 
 

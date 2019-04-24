@@ -1,5 +1,5 @@
 from flask import *
-from config import global_data
+from config_manager import global_data
 
 website_blueprint = Blueprint("/", __name__, static_folder="./www/static", template_folder="./www/template",
                               static_url_path="/")
@@ -42,7 +42,7 @@ def index_css():
 
 @website_blueprint.route("newsDetail.html")
 def news_detail():
-    index = request.args.get("index", None)
-    if index is None:
+    news_index = request.args.get("index", None)
+    if news_index is None:
         abort(404)
-    return render_template("newsDetail.html", data=global_data.config, news=global_data.config['动态']['新闻'][int(index)])
+    return render_template("newsDetail.html", data=global_data.config, news=global_data.config['动态']['新闻'][int(news_index)])

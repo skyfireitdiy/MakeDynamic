@@ -15,311 +15,321 @@
 </head>
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin" id="app">
-    <title>[[ title ]]</title>
-    <div class="layui-header" id="header">
-        <div class="layui-logo">[[ title ]]</div>
-        <ul class="layui-nav layui-layout-right">
-            <li class="layui-nav-item">
-                <a href="javascript:;">
-                    <img :src="user.img" class="layui-nav-img">
-                    [[ user.name ]]
-                </a>
-            </li>
-            <li class="layui-nav-item"><a href="logout">注销</a></li>
-        </ul>
-    </div>
-
-    <div class="layui-side layui-bg-black" id="left_side">
-        <div class="layui-side-scroll">
-            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
-            <ul class="layui-nav layui-nav-tree layui-inline">
-                <li class="layui-nav-item layui-nav-itemed">
-                    <a>数据管理</a>
-                    <dl class="layui-nav-child">
-                        <dd><a @click="page_type='data'">数据设置</a></dd>
-                    </dl>
+    <template>
+        <title>[[ title ]]</title>
+        <div class="layui-header" id="header">
+            <div class="layui-logo">[[ title ]]</div>
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">
+                        <img :src="user.img" class="layui-nav-img">
+                        [[ user.name ]]
+                    </a>
                 </li>
-                <li class="layui-nav-item layui-nav-itemed">
-                    <a>文件管理</a>
-                    <dl class="layui-nav-child">
-                        <dd><a @click="page_type='file'">普通文件管理</a></dd>
-                        <dd><a @click="page_type='image'">图片管理</a></dd>
-                        <dd><a @click="page_type='music'">音乐管理</a></dd>
-                        <dd><a @click="page_type='video'">视频管理</a></dd>
-                    </dl>
-                </li>
-                <li class="layui-nav-item layui-nav-itemed">
-                    <a>基础设置</a>
-                    <dl class="layui-nav-child">
-                        <dd><a @click="page_type='base'">后台信息设置</a></dd>
-                    </dl>
-                </li>
-                <li class="layui-nav-item layui-nav-itemed">
-                    <a>用户及安全</a>
-                    <dl class="layui-nav-child">
-                        <dd><a @click="page_type='user_info'">用户信息</a></dd>
-                        <dd><a @click="page_type='password'">密码修改</a></dd>
-                        <dd><a @click="dev_mode">开发者模式</a></dd>
-                    </dl>
-                </li>
-
+                <li class="layui-nav-item"><a href="logout">注销</a></li>
             </ul>
         </div>
-    </div>
 
-    <div class="layui-body">
-        <!-- 内容主体区域 -->
-        <div style="padding: 0px;">
-            <data_form v-show="page_type==='data'" :current_data="type_data" :stack="[]" :add_type_sel_list="add_type_sel_list"
-                       @data_change="on_data_change($event)"
-                       @delete_data="on_delete_data($event)"
-                       @add_new_data="on_add_new_data($event)"
-                       @copy_new_data="on_copy_new_data($event)"
-                       :dev="dev">
-            </data_form>
-            <div v-show="page_type==='base'"  style="text-align: center;">
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">标题栏</label>
-                        <div class="layui-input-inline">
-                            <input type="text" name="title" v-model="tmp_title" autocomplete="off" class="layui-input">
-                        </div>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">网站版权</label>
-                        <div class="layui-input-inline">
-                            <input type="text" name="footer" v-model="tmp_footer" autocomplete="off" class="layui-input">
-                        </div>
-                    </div>
-                </div>
-                <button @click="change_base_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
+        <div class="layui-side layui-bg-black" id="left_side">
+            <div class="layui-side-scroll">
+                <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+                <ul class="layui-nav layui-nav-tree layui-inline">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>数据管理</a>
+                        <dl class="layui-nav-child">
+                            <dd><a @click="page_type='data'">数据设置</a></dd>
+                            <dd><a @click="page_type='template'">模板管理</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>资源管理</a>
+                        <dl class="layui-nav-child">
+                            <dd><a @click="page_type='file'">普通文件管理</a></dd>
+                            <dd><a @click="page_type='image'">图片管理</a></dd>
+                            <dd><a @click="page_type='music'">音乐管理</a></dd>
+                            <dd><a @click="page_type='video'">视频管理</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>基础设置</a>
+                        <dl class="layui-nav-child">
+                            <dd><a @click="page_type='base'">后台信息设置</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a>用户及安全</a>
+                        <dl class="layui-nav-child">
+                            <dd><a @click="page_type='user_info'">用户信息</a></dd>
+                            <dd><a @click="page_type='password'">密码修改</a></dd>
+                            <dd><a @click="dev_mode">开发者模式</a></dd>
+                        </dl>
+                    </li>
+
+                </ul>
             </div>
-            <div v-show="page_type==='password'" style="text-align: center">
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">旧密码</label>
-                        <div class="layui-input-inline">
-                            <input type="password" name="old_ps" v-model="old_ps" autocomplete="off" class="layui-input">
+        </div>
+
+        <div class="layui-body">
+            <!-- 内容主体区域 -->
+            <div style="padding: 0px;">
+                <data_form v-show="page_type==='data'" :current_data="type_data" :stack="[]" :template="template"
+                           @data_change="on_data_change('data',$event)"
+                           @delete_data="on_delete_data('data',$event)"
+                           @add_new_data="on_add_new_data('data',$event)"
+                           @to_template="on_to_template($event)"
+                           :dev="dev" co_type="data">
+                </data_form>
+                <div v-show="page_type==='base'"  style="text-align: center;">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">标题栏</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="title" v-model="tmp_title" autocomplete="off" class="layui-input">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">新密码</label>
-                        <div class="layui-input-inline">
-                            <input type="password" name="new_ps" v-model="new_ps" autocomplete="off" class="layui-input">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">网站版权</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="footer" v-model="tmp_footer" autocomplete="off" class="layui-input">
+                            </div>
                         </div>
                     </div>
+                    <button @click="change_base_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
                 </div>
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">重复新密码</label>
-                        <div class="layui-input-inline">
-                            <input type="password" name="new_ps2" v-model="new_ps2" autocomplete="off" class="layui-input">
+                <div v-show="page_type==='password'" style="text-align: center">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">旧密码</label>
+                            <div class="layui-input-inline">
+                                <input type="password" name="old_ps" v-model="old_ps" autocomplete="off" class="layui-input">
+                            </div>
                         </div>
                     </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">新密码</label>
+                            <div class="layui-input-inline">
+                                <input type="password" name="new_ps" v-model="new_ps" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">重复新密码</label>
+                            <div class="layui-input-inline">
+                                <input type="password" name="new_ps2" v-model="new_ps2" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="change_password" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
                 </div>
-                <button @click="change_password" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
-            </div>
-            <div v-show="page_type==='file'">
-                <button type="button" class="layui-btn" id="upload_file"><i class="layui-icon"></i>选择文件</button>
-                <button type="button" class="layui-btn" id="start_upload_file">开始上传</button>
-                <table class="layui-table">
-                    <colgroup>
-                        <col>
-                        <col width="100px">
-                    </colgroup>
-                    <thead class="layui-table-header">
+                <div v-show="page_type==='file'">
+                    <button type="button" class="layui-btn" id="upload_file"><i class="layui-icon"></i>选择文件</button>
+                    <button type="button" class="layui-btn" id="start_upload_file">开始上传</button>
+                    <table class="layui-table">
+                        <colgroup>
+                            <col>
+                            <col width="100px">
+                        </colgroup>
+                        <thead class="layui-table-header">
+                            <tr>
+                                <th>
+                                    文件地址
+                                </th>
+                                <th>
+                                    操作
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in file_data">
+                                <td><a :href="item.url">[[item.url]]</a></td>
+                                <td>
+                                    <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(file_data,item.url)">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div v-show="page_type==='image'">
+
+                    <div class="layui-upload">
+                        <button type="button" class="layui-btn" id="upload_image">选择图片</button>
+                        <button type="button" class="layui-btn" id="start_upload_image">开始上传</button>
+                        <div class="layui-upload-list">
+                            <img class="layui-upload-img" width="100px" height="100px" style="border-width: thin" id="upload_img_preview">
+                        </div>
+                    </div>
+                    <table class="layui-table">
+                        <colgroup>
+                            <col>
+                            <col width="180px">
+                            <col width="100px">
+                        </colgroup>
+                        <thead class="layui-table-header">
                         <tr>
                             <th>
-                                文件地址
+                                图片地址
+                            </th>
+                            <th>
+                                缩略图（点击预览）
                             </th>
                             <th>
                                 操作
                             </th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="item in file_data">
-                            <td><a :href="item.url">[[item.url]]</a></td>
-                            <td>
-                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(file_data,item.url)">删除</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div v-show="page_type==='image'">
-
-                <div class="layui-upload">
-                    <button type="button" class="layui-btn" id="upload_image">选择图片</button>
-                    <button type="button" class="layui-btn" id="start_upload_image">开始上传</button>
-                    <div class="layui-upload-list">
-                        <img class="layui-upload-img" width="100px" height="100px" style="border-width: thin" id="upload_img_preview">
-                    </div>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in image_data">
+                                <td>[[item.url]]</td>
+                                <td style="text-align: center">
+                                    <img @click="show_image(item.url)" style="border-width: 1px" width="40px" height="40px" :src="item.thumbnail">
+                                </td>
+                                <td>
+                                    <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_image(item.name)">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <table class="layui-table">
-                    <colgroup>
-                        <col>
-                        <col width="180px">
-                        <col width="100px">
-                    </colgroup>
-                    <thead class="layui-table-header">
-                    <tr>
-                        <th>
-                            图片地址
-                        </th>
-                        <th>
-                            缩略图（点击预览）
-                        </th>
-                        <th>
-                            操作
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="item in image_data">
+                <div v-show="page_type==='music'">
+
+                    <div class="layui-upload">
+                        <button type="button" class="layui-btn" id="upload_music">选择音乐</button>
+                        <button type="button" class="layui-btn" id="start_upload_music">开始上传</button>
+                    </div>
+                    <table class="layui-table">
+                        <colgroup>
+                            <col>
+                            <col width="300px">
+                            <col width="100px">
+                        </colgroup>
+                        <thead class="layui-table-header">
+                        <tr>
+                            <th>
+                                音乐地址
+                            </th>
+                            <th>
+                                试听
+                            </th>
+                            <th>
+                                操作
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="item in music_data">
                             <td>[[item.url]]</td>
-                            <td style="text-align: center">
-                                <img @click="show_image(item.url)" style="border-width: 1px" width="40px" height="40px" :src="item.thumbnail">
+                            <td>
+                                <audio controls>
+                                    <source :src="item.url">
+                                    浏览器不支持该格式
+                                </audio>
                             </td>
                             <td>
-                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_image(item.name)">删除</button>
+                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(music_data,item.url)">删除</button>
                             </td>
                         </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div v-show="page_type==='music'">
+                        </tbody>
+                    </table>
+                </div>
+                <div v-show="page_type==='video'">
 
-                <div class="layui-upload">
-                    <button type="button" class="layui-btn" id="upload_music">选择音乐</button>
-                    <button type="button" class="layui-btn" id="start_upload_music">开始上传</button>
+                    <div class="layui-upload">
+                        <button type="button" class="layui-btn" id="upload_video">选择视频</button>
+                        <button type="button" class="layui-btn" id="start_upload_video">开始上传</button>
+                    </div>
+                    <table class="layui-table">
+                        <colgroup>
+                            <col>
+                            <col width="200px">
+                        </colgroup>
+                        <thead class="layui-table-header">
+                        <tr>
+                            <th>
+                                视频地址
+                            </th>
+                            <th>
+                                操作
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="item in video_data">
+                            <td>[[item.url]]</td>
+                            <td>
+                                <button class="layui-btn layui-btn-sm" @click="show_video(item.url)">播放</button>
+                                <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(video_data,item.url)">删除</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <table class="layui-table">
-                    <colgroup>
-                        <col>
-                        <col width="300px">
-                        <col width="100px">
-                    </colgroup>
-                    <thead class="layui-table-header">
-                    <tr>
-                        <th>
-                            音乐地址
-                        </th>
-                        <th>
-                            试听
-                        </th>
-                        <th>
-                            操作
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="item in music_data">
-                        <td>[[item.url]]</td>
-                        <td>
-                            <audio controls>
-                                <source :src="item.url">
-                                浏览器不支持该格式
-                            </audio>
-                        </td>
-                        <td>
-                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(music_data,item.url)">删除</button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div v-show="page_type==='video'">
+                <div v-show="page_type==='user_info'" style="text-align: center">
+                    <img :src="tmp_user_img" class="layui-nav-img" style="width: 100px; height: 100px;">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户头像（URL）</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="user_img" v-model="tmp_user_img" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">用户名</label>
+                            <div class="layui-input-inline">
+                                <input type="text" name="user_name" v-model="tmp_user_name" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="layui-upload">
-                    <button type="button" class="layui-btn" id="upload_video">选择视频</button>
-                    <button type="button" class="layui-btn" id="start_upload_video">开始上传</button>
+                    <button @click="change_user_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
                 </div>
-                <table class="layui-table">
-                    <colgroup>
-                        <col>
-                        <col width="200px">
-                    </colgroup>
-                    <thead class="layui-table-header">
-                    <tr>
-                        <th>
-                            视频地址
-                        </th>
-                        <th>
-                            操作
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="item in video_data">
-                        <td>[[item.url]]</td>
-                        <td>
-                            <button class="layui-btn layui-btn-sm" @click="show_video(item.url)">播放</button>
-                            <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_file(video_data,item.url)">删除</button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div v-show="page_type==='user_info'" style="text-align: center">
-                <img :src="tmp_user_img" class="layui-nav-img" style="width: 100px; height: 100px;">
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">用户头像（URL）</label>
-                        <div class="layui-input-inline">
-                            <input type="text" name="user_img" v-model="tmp_user_img" autocomplete="off" class="layui-input">
+                <div v-show="page_type==='dev'" style="text-align: center">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">原开发密码</label>
+                            <div class="layui-input-inline">
+                                <input type="password" name="old_dev_ps" v-model="old_dev_ps" autocomplete="off" class="layui-input">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">用户名</label>
-                        <div class="layui-input-inline">
-                            <input type="text" name="user_name" v-model="tmp_user_name" autocomplete="off" class="layui-input">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">新开发密码</label>
+                            <div class="layui-input-inline">
+                                <input type="password" name="new_dev_ps" v-model="new_dev_ps" autocomplete="off" class="layui-input">
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <button @click="change_user_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
-            </div>
-            <div v-show="page_type==='dev'" style="text-align: center">
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">原开发密码</label>
-                        <div class="layui-input-inline">
-                            <input type="password" name="old_dev_ps" v-model="old_dev_ps" autocomplete="off" class="layui-input">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <label class="layui-form-label">重复新开发密码</label>
+                            <div class="layui-input-inline">
+                                <input type="password" name="new_dev_ps2" v-model="new_dev_ps2" autocomplete="off" class="layui-input">
+                            </div>
                         </div>
                     </div>
+                    <button @click="change_dev_password" class="layui-btn layui-btn-radius layui-btn-sm">修改开发密码</button>
+                    <button class="layui-btn layui-btn-sm layui-btn-radius layui-btn-danger" @click="close_dev">关闭开发者模式</button>
                 </div>
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">新开发密码</label>
-                        <div class="layui-input-inline">
-                            <input type="password" name="new_dev_ps" v-model="new_dev_ps" autocomplete="off" class="layui-input">
-                        </div>
-                    </div>
-                </div>
-                <div class="layui-form-item">
-                    <div class="layui-inline">
-                        <label class="layui-form-label">重复新开发密码</label>
-                        <div class="layui-input-inline">
-                            <input type="password" name="new_dev_ps2" v-model="new_dev_ps2" autocomplete="off" class="layui-input">
-                        </div>
-                    </div>
-                </div>
-                <button @click="change_dev_password" class="layui-btn layui-btn-radius layui-btn-sm">修改开发密码</button>
-                <button class="layui-btn layui-btn-sm layui-btn-radius layui-btn-danger" @click="close_dev">关闭开发者模式</button>
+                <data_form v-show="page_type==='template'" :current_data="template" :stack="[]" :template="template"
+                           @data_change="on_data_change('template',$event)"
+                           @delete_data="on_delete_data('template',$event)"
+                           @add_new_data="on_add_new_data('template',$event)"
+                           :dev="dev"
+                           co_type="template">
+                </data_form>
             </div>
         </div>
-    </div>
 
-    <div class="layui-footer" style="text-align: center">
-        [[ footer ]]
-    </div>
+        <div class="layui-footer" style="text-align: center">
+            [[ footer ]]
+        </div>
+    </template>
 </div>
 
 <div id="rich_edit" name="content" lay-ignore="true">
@@ -342,7 +352,6 @@
         let layer = layui.layer;
         let upload = layui.upload;
 
-
         let csrf_token = "{{ csrf_token() }}";
 
         $("#rich_edit").hide();
@@ -364,7 +373,7 @@
             }
 
             upload() {
-                return this.loader.file
+                return this.loader.file_manager
                     .then( file => new Promise((resolve, reject) => {
                         this._initRequest();
                         this._initListeners( resolve, reject, file );
@@ -405,7 +414,7 @@
 
             _sendRequest(file) {
                 const data = new FormData();
-                data.append( 'file', file );
+                data.append( 'file_manager.py', file );
                 this.xhr.send( data );
             }
         }
@@ -421,7 +430,7 @@
 
         let data_form = Vue.component("data_form", {
                 name: "data_form",
-                props: ["current_data", "stack", "dev", "add_type_sel_list"],
+                props: ["current_data", "stack", "dev", "template", "co_type"],
                 delimiters: ["[[", "]]"],
                 data: function () {
                     return {
@@ -560,11 +569,6 @@
                         return obj;
                     },
 
-                    copy_new: function(){
-                        this.$emit("copy_new_data", {
-                            stack: this.stack
-                        });
-                    },
 
                     add_new: function () {
                         let _this = this;
@@ -603,7 +607,7 @@
                         return this.get_data_type(this.current_data);
                     },
                     index_string: function () {
-                        let ret = "data";
+                        let ret = this.co_type;
                         for (let k of this.stack) {
                             ret += "[" + this.to_string(k) + "]";
                         }
@@ -622,33 +626,40 @@
                             </h2>
                             <div class="layui-colla-content">
                                 <div v-if="current_data_type == 'Object' || current_data_type == 'Array'">
-                                    <table class="layui-table" lay-size="sm">
+                                    <table class="layui-table" lay-size="sm" >
                                         <colgroup>
                                             <col width="100">
                                             <col>
-                                            <col width="50" v-if="dev || current_data_type == 'Array'">
+                                            <col width="150" v-if="co_type==='template' || dev || current_data_type == 'Array'">
                                         </colgroup>
                                         <thead>
                                         <tr>
                                             <th>索引</th>
                                             <th>值</th>
-                                            <th v-if="dev || current_data_type == 'Array'">操作</th>
+                                            <th v-if="co_type==='template' || dev || current_data_type == 'Array'">操作</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <tr v-for="(value,key) in current_data">
                                             <td>[[ key ]]</td>
                                             <td>
-                                                <data_form :current_data=value :stack="add_item_to_array(stack, key)" :add_type_sel_list="add_type_sel_list"
+                                                <data_form :current_data=value :stack="add_item_to_array(stack, key)" :template="template"
                                                            @data_change="$emit('data_change', $event);"
                                                            @delete_data="$emit('delete_data', $event)"
                                                            @add_new_data="$emit('add_new_data', $event)"
-                                                           @copy_new_data="$emit('copy_new_data', $event)" :dev="dev"></data_form>
+                                                           @to_template="$emit('to_template', $event)"
+                                                           :co_type="co_type"
+                                                           :dev="dev"
+                                                           ></data_form>
                                             </td>
-                                            <td v-if="dev || current_data_type == 'Array'">
+                                            <td v-if="co_type==='template' || dev || current_data_type === 'Array'">
                                                 <button @click="$emit('delete_data', {stack:stack, index:key})"
                                                     class="layui-btn layui-btn-danger layui-btn-sm">
                                                     <i class="layui-icon" title="删除">删除</i>
+                                                </button>
+                                                <button v-if="co_type==='data'" @click="$emit('to_template', {key: key,stack: stack})"
+                                                    class="layui-btn layui-btn-green layui-btn-sm">
+                                                    <i class="layui-icon" title="抽象">抽象</i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -656,19 +667,17 @@
                                     </table>
                                     <div class="layui-inline">
                                         <div class="layui-input-inline">
-                                             <input type="text" v-if="dev && current_data_type == 'Object'"
+                                             <input type="text" v-if="(co_type==='template' || dev) && current_data_type === 'Object'"
                                                                  v-model="new_key_name" placeholder="新属性名" class="layui-input">
                                         </div>
                                         <div class="layui-inline">
-                                            <select v-model="new_type" class="layui-select" lay-ignore="true" v-if="dev">
-                                                <option v-for="(v,k) in add_type_sel_list">[[ k ]]</option>
+                                            <select v-model="new_type" class="layui-select" lay-ignore="true" v-if="co_type==='template' || dev || current_data_type==='Array'">
+                                                <option v-for="(v,k) in template">[[ k ]]</option>
                                             </select>
                                         </div>
                                         <div class="layui-input-inline">
-                                            <button @click="add_new" class="layui-btn layui-btn-sm" v-if="dev">
+                                            <button @click="add_new" class="layui-btn layui-btn-sm" v-if="co_type=='template' || dev || current_data_type==='Array'">
                                             <i class="layui-icon" title="新增">新增</i></button>
-                                            <button @click="copy_new" class="layui-btn layui-btn-sm" v-if="current_data_type == 'Array'" v-show="current_data.length !== 0">
-                                            <i class="layui-icon" title="复制">复制</i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -730,7 +739,7 @@
                 old_dev_ps:"",
                 new_dev_ps:"",
                 new_dev_ps2:"",
-                add_type_sel_list:{{add_type_sel_list|tojson}}
+                template:{{template|tojson}}
             },
             delimiters: ["[[", "]]"],
             components: {
@@ -953,41 +962,52 @@
                         })
                     });
                 },
-                on_copy_new_data: function(data){
+                on_to_template: function(data)
+                {
                     let _this = this;
-
-                    $.post("copy_data", {data:JSON.stringify(data)}, function(res){
-                        let result = JSON.parse(res);
-                        if(result.code === 0){
-                            let v = _this.type_data;
-                            for (let key of data.stack) {
-                                v = v[key];
-                            }
-                            v.push(JSON.parse(JSON.stringify(v[v.length-1])));
-                            layer.msg("复制成功", {icon:1});
-                            Vue.nextTick(function(){
-                                element.init();
-                            });
-                        } else {
-                            layer.msg("复制失败：" + result.msg, {icon:2});
+                    layer.prompt({
+                        value: _this.tmp_value,
+                        area: ["100%", "100%"],
+                        title: "请输入新的模板名称",
+                        formType: 0
+                    }, function (value, index, item) {
+                        if(_this.template[value] !== undefined)
+                        {
+                            layer.msg("模板名称已存在" , {icon:2});
+                            return;
                         }
-                    }).fail(function(){
-                        layer.msg("复制失败", {icon:2});
-                    });
-                },
-                on_add_new_data: function (data) {
-                    let _this = this;
-                    layui.use(["jquery", "layer"], function () {
-                        let $ = layui.jquery;
-                        let layer = layui.layer;
-
-                        $.post("add_data", {"data": JSON.stringify(data)}, function (res) {
+                        data["t_name"] = value;
+                        $.post("to_template", {"data": JSON.stringify(data)}, function (res) {
                             let ret = JSON.parse(res);
                             if (ret.code !== 0) {
                                 layer.msg("错误：" + ret.code, {icon: 2});
                                 return;
                             }
-                            let v = _this.type_data;
+                            v = _this.template;
+                            let value = ret.data;
+                            Vue.set(v, data.key, value);
+                            layer.msg("添加成功", {icon: 1});
+                            Vue.nextTick(function(){
+                                element.init();
+                            });
+                        }).fail(function (res) {
+                            layer.msg("添加失败", {icon: 2});
+                        });
+                        layer.close(index);
+                    })
+                },
+                on_add_new_data: function (co_type,data) {
+                    let _this = this;
+                    layui.use(["jquery", "layer"], function () {
+                        let $ = layui.jquery;
+                        let layer = layui.layer;
+                        $.post("add_data", {"data": JSON.stringify(data), "co_type" : co_type}, function (res) {
+                            let ret = JSON.parse(res);
+                            if (ret.code !== 0) {
+                                layer.msg("错误：" + ret.code, {icon: 2});
+                                return;
+                            }
+                            let v = co_type==="data"? _this.type_data : _this.template;
                             for (let key of data.stack) {
                                 v = v[key];
                             }
@@ -1007,12 +1027,12 @@
                     });
                 },
 
-                on_data_change: function (data) {
+                on_data_change: function (co_type, data) {
                     let _this = this;
                     layui.use(["layer", "jquery"], function () {
                         let layer = layui.layer;
                         let $ = layui.jquery;
-                        let v = _this.type_data;
+                        let v = co_type==="data" ? _this.type_data: _this.template;
                         for (let key of data.stack.slice(0, data.stack.length - 1)) {
                             v = v[key];
                         }
@@ -1020,7 +1040,7 @@
                         layer.confirm("确认修改 ?", {
                             btn: ['确认', '取消'] //按钮
                         }, function () {
-                            $.post("data_change", {"data": JSON.stringify(data)}, function (res) {
+                            $.post("data_change", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
                                 let ret = JSON.parse(res);
                                 if (ret.code !== 0) {
                                     layer.msg("错误：" + ret.code, {icon: 2});
@@ -1039,13 +1059,13 @@
                     });
                 },
 
-                on_delete_data: function (data) {
+                on_delete_data: function (co_type, data) {
                     let _this = this;
                     layui.use(["jquery", "layer"], function () {
                         let $ = layui.jquery;
                         let layer = layui.layer;
 
-                        let v = _this.type_data;
+                        let v = co_type==="data"? _this.type_data : _this.template;
                         for (let key of data.stack) {
                             v = v[key];
                         }
@@ -1053,7 +1073,7 @@
                         layer.confirm("确认将 " + data.index + " 删除 ?", {
                             btn: ['确认', '取消'] //按钮
                         }, function () {
-                            $.post("delete_data", {"data": JSON.stringify(data)}, function (res) {
+                            $.post("delete_data", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
                                 let ret = JSON.parse(res);
                                 if (ret.code !== 0) {
                                     layer.msg("错误：" + ret.code, {icon: 2});
@@ -1082,7 +1102,7 @@
         upload.render({
             elem: '#upload_file',
             url: 'upload_file',
-            accept: 'file',
+            accept: 'file_manager.py',
             auto: false,
             bindAction:"#start_upload_file",
             done: function(res){
