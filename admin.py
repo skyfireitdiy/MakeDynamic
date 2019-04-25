@@ -68,7 +68,7 @@ def to_template():
     tv = global_template.config
     tv[data["t_name"]] = json5.loads(json5.dumps(v))
     save_all_config()
-    return json5.dumps({"code": 0, "data": v})
+    return jsonify({"code": 0, "data": v})
 
 
 @admin_blueprint.route("/add_data", methods=["POST"])
@@ -88,7 +88,7 @@ def on_add_data():
     elif data["src_type"] == "Object":
         v[data["key"]] = value
     save_all_config()
-    return json5.dumps({"code": 0, "data": value})
+    return jsonify({"code": 0, "data": value})
 
 
 @admin_blueprint.route("/data_change", methods=["POST"])
@@ -104,7 +104,7 @@ def on_data_change():
         v = v[k]
     v[data["stack"][len(data["stack"]) - 1]] = data["value"]
     save_all_config()
-    return json5.dumps({"code": 0})
+    return jsonify({"code": 0})
 
 
 @admin_blueprint.route("/delete_data", methods=["POST"])
@@ -120,7 +120,7 @@ def on_delete_data():
         v = v[k]
     del v[data["index"]]
     save_all_config()
-    return json5.dumps({"code": 0})
+    return jsonify({"code": 0})
 
 
 @admin_blueprint.route("/change_base_info", methods=["POST"])
@@ -131,7 +131,7 @@ def on_change_base_info():
     global_config.config["title"] = title
     global_config.config["footer"] = footer
     global_config.save()
-    return json5.dumps({"code": 0})
+    return jsonify({"code": 0})
 
 
 @admin_blueprint.route("/login_page.html")
@@ -150,22 +150,22 @@ def login():
     if not user.verify_password(user_name, password):
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
-        return json5.dumps(
+        return jsonify(
             dict(code=1, msg="用户名或密码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
     elif captcha.lower() != session["captcha"].lower():
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
-        return json5.dumps(dict(code=1, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+        return jsonify(dict(code=1, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
     else:
         login_user(user, remember=False)
-        return json5.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
+        return jsonify(dict(code=0, href=request.args.get('next') or "/admin"))
 
 
 @admin_blueprint.route('/get_new_captcha', methods=["POST"])
 def get_new_captcha():
     cap_str, cap_img = make_captcha()
     session["captcha"] = cap_str
-    return json5.dumps(dict(code=0, new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+    return jsonify(dict(code=0, new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
 
 
 @admin_blueprint.route('/logout')
@@ -181,11 +181,11 @@ def change_ps():
     old_ps = request.form["old_ps"]
     new_ps = request.form["new_ps"]
     if not current_user.verify_password(current_user.username, old_ps):
-        return json5.dumps(dict(code=1, msg="原密码错误"))
+        return jsonify(dict(code=1, msg="原密码错误"))
     else:
         global_config.config["user"]["password"] = generate_password_hash(new_ps)
         global_config.save()
-        return json5.dumps(dict(code=0))
+        return jsonify(dict(code=0))
 
 
 @admin_blueprint.route("delete_file", methods=["POST"])
@@ -193,9 +193,9 @@ def change_ps():
 def delete_file():
     file_name = os.path.join("file", request.form["type"], my_secure_filename(request.form["url"]))
     if not os.path.exists(file_name):
-        return json5.dumps(dict(code=1, msg="文件不存在"))
+        return jsonify(dict(code=1, msg="文件不存在"))
     os.remove(file_name)
-    return json5.dumps(dict(code=0))
+    return jsonify(dict(code=0))
 
 
 @admin_blueprint.route("delete_image", methods=["POST"])
@@ -205,39 +205,39 @@ def delete_image():
     thumbnail_file_name = os.path.join("file", "thumbnail_data", my_secure_filename(request.form["name"]))
     os.remove(image_file_name)
     os.remove(thumbnail_file_name)
-    return json5.dumps(dict(code=0))
+    return jsonify(dict(code=0))
 
 
 @admin_blueprint.route("upload_file", methods=["POST"])
 @login_required
 def upload_file():
     if "file" not in request.files:
-        return json5.dumps(dict(code=1, msg="应该上传文件"))
+        return jsonify(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     file_name = os.path.join("file", "file_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "file_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json5.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return jsonify(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_image", methods=["POST"])
 @login_required
 def upload_image():
     if "file" not in request.files:
-        return json5.dumps(dict(code=1, msg="应该上传文件"))
+        return jsonify(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_image_ext(se_filename):
-        return json5.dumps(dict(code=2, msg="图片上传仅支持jpg, jpeg, png, gif格式"))
+        return jsonify(dict(code=2, msg="图片上传仅支持jpg, jpeg, png, gif格式"))
     file_name = os.path.join("file", "image_data", se_filename)
     if os.path.exists(file_name):
         se_filename = uuid.uuid4().hex + "_" + se_filename
         file_name = os.path.join("file", "image_data", se_filename)
     f.save(file_name)
     thumbnail = make_thumbnail(se_filename, True)
-    return json5.dumps(
+    return jsonify(
         dict(code=0, url=os.path.join("/", file_name.replace('\\', '/')), thumbnail=thumbnail, name=se_filename))
 
 
@@ -245,48 +245,48 @@ def upload_image():
 @login_required
 def on_article_image():
     if "file" not in request.files:
-        return json5.dumps(dict(uploaded=False, url=""))
+        return jsonify(dict(uploaded=False, url=""))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_image_ext(se_filename):
-        return json5.dumps(dict(uploaded=False, url=""))
+        return jsonify(dict(uploaded=False, url=""))
     file_name = os.path.join("file", "article_image_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "article_image_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json5.dumps(dict(uploaded=True, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return jsonify(dict(uploaded=True, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_music", methods=["POST"])
 @login_required
 def upload_music():
     if "file" not in request.files:
-        return json5.dumps(dict(code=1, msg="应该上传文件"))
+        return jsonify(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_music_ext(se_filename):
-        return json5.dumps(dict(code=2, msg="音乐上传仅支持wav，mp3，ogg，acc，webm格式"))
+        return jsonify(dict(code=2, msg="音乐上传仅支持wav，mp3，ogg，acc，webm格式"))
     file_name = os.path.join("file", "music_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "music_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json5.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return jsonify(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_video", methods=["POST"])
 @login_required
 def upload_video():
     if "file" not in request.files:
-        return json5.dumps(dict(code=1, msg="应该上传文件"))
+        return jsonify(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_video_ext(se_filename):
-        return json5.dumps(dict(code=2, msg="视频上传仅支持mp4，ogg，webm格式"))
+        return jsonify(dict(code=2, msg="视频上传仅支持mp4，ogg，webm格式"))
     file_name = os.path.join("file", "video_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "video_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json5.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return jsonify(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("change_user_info", methods=["POST"])
@@ -297,7 +297,7 @@ def change_user_info():
     global_config.config["user"]["img"] = img
     global_config.config["user"]["name"] = name
     global_config.save()
-    return json5.dumps(dict(code=0))
+    return jsonify(dict(code=0))
 
 
 if __name__ == "__main__":
