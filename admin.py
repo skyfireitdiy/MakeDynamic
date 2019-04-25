@@ -66,7 +66,7 @@ def to_template():
         v = v[k]
     v = v[data["key"]]
     tv = global_template.config
-    tv[data["t_name"]] = json5.loads(json5.dumps(v))
+    tv[data["t_name"]] = json5.loads(json.dumps(v))
     save_all_config()
     return jsonify({"code": 0, "data": v})
 
@@ -82,7 +82,7 @@ def on_add_data():
         v = global_template.config
     for k in data["stack"]:
         v = v[k]
-    value = json5.loads(json5.dumps(global_template.config[data["item_type"]]))
+    value = json5.loads(json.dumps(global_template.config[data["item_type"]]))
     if data["src_type"] == "Array":
         v.append(value)
     elif data["src_type"] == "Object":

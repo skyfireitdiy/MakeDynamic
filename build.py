@@ -109,17 +109,17 @@ def %s():
     )
 
     with open(os.path.join(project_path, "config/config.json"), 'w') as fp:
-        fp.write(json5.dumps(config, indent=4))
+        fp.write(json.dumps(config, indent=4))
     if args.json_data is not None:
         shutil.copy(args.json_data, os.path.join(project_path, "config/data.json"))
     else:
         with open(os.path.join(project_path, "config/data.json"), 'w') as fp:
-            fp.write(json5.dumps({}))
+            fp.write(json.dumps({}))
     if args.data_template is not None:
         shutil.copy(args.data_template, os.path.join(project_path, "config/template.json"))
     else:
         with open(os.path.join(project_path, "config/template.json"), "w") as fp:
-            fp.write(json5.dumps({
+            fp.write(json.dumps({
                 "Number": 0,
                 "Array": [],
                 "Object": {},
@@ -127,7 +127,7 @@ def %s():
             }))
 
     with open(os.path.join(project_path, "config/module.json"), "w") as fp:
-        fp.write(json5.dumps({
+        fp.write(json.dumps({
             "基础信息管理": {
                 "数据管理": {
                     "数据设置": {
