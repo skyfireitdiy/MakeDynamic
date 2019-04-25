@@ -1,0 +1,44 @@
+{
+  "基础信息管理": {
+    "数据管理":{
+      "数据设置": {
+        "url": "data.html"
+      },
+      "模板设置": {
+        "url": "template.html"
+      }
+    },
+    "资源管理": {
+      "普通文件管理": {
+        "url": "normal_file_manage.html"
+      },
+      "图片管理": {
+        "url": "image_manage.html"
+      },
+      "音乐管理": {
+        "url": "music_manage.html"
+      },
+      "视频管理": {
+        "url": "video_manage.html"
+      }
+    },
+    "基础设置":{
+      "后台信息设置": {
+        "url": "base_info_manage.html"
+      }
+    },
+    "用户及安全": {
+      "用户信息": {
+        "url": "user_info_manage.html"
+      },
+      "密码修改": {
+        "url": "password_manage.html"
+      }
+    },
+    "网页预览": {
+      "首页预览": {
+        "url": "../index.html"
+      }
+    }
+  }
+}

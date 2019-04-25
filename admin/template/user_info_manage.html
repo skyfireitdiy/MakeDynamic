@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="layui/css/layui.css" media="all">
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout" id="app">
+    <template>
+        <!-- 内容主体区域 -->
+        <div style="text-align: center">
+            <img :src="tmp_user_img" class="layui-nav-img" style="width: 100px; height: 100px;">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户头像（URL）</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="user_img" v-model="tmp_user_img" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="user_name" v-model="tmp_user_name" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <button @click="change_user_info" class="layui-btn layui-btn-radius layui-btn-sm">确认修改</button>
+        </div>
+    </template>
+</div>
+
+
+<script src="vue.js"></script>
+<script src="layui/layui.all.js" charset="utf-8"></script>
+<script src="md5.js"></script>
+<script src="classic/ckeditor.js"></script>
+
+
+
+<script>
+
+    layui.use(["jquery", "element", "layer", "form", "upload"], function () {
+        let $ = layui.jquery;
+        let element = layui.element;
+        let form = layui.form;
+        let layer = layui.layer;
+        let upload = layui.upload;
+
+        let csrf_token = "{{ csrf_token() }}";
+
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+                }
+            }
+        });
+
+
+        let app = new Vue({
+            el: "#app",
+            data: {
+                user:{
+                    name:"{{config['user']['name']}}",
+                    img:"{{config['user']['img']}}"
+                },
+                tmp_user_img: "{{config['user']['img']}}",
+                tmp_user_name: "{{config['user']['name']}}",
+            },
+            delimiters: ["[[", "]]"],
+            methods: {
+                change_user_info: function(){
+                    let _this = this;
+                    layer.confirm("确认修改用户信息？", {
+                        btn: ["确认", "取消"]
+                    }, function(){
+                        $.post("change_user_info", {name: _this.tmp_user_name, img: _this.tmp_user_img}, function(res){
+                            let result = JSON.parse(res);
+                            if(result.code === 0){
+                                layer.msg("修改成功", {icon:1});
+                                _this.user.name = _this.tmp_user_name;
+                                _this.user.img = _this.tmp_user_img;
+                            } else {
+                                layer.msg("修改失败：" + result.msg, {icon:2});
+                                _this.tmp_user_name = _this.user.name;
+                                _this.tmp_user_img = _this.user.img;
+                            }
+                        }).fail(function(){
+                            layer.msg("修改失败", {icon:2});
+                            _this.tmp_user_name = _this.user.name;
+                            _this.tmp_user_img = _this.user.img;
+                        });
+                    }, function(){
+                        _this.tmp_user_name = _this.user.name;
+                        _this.tmp_user_img = _this.user.img;
+                    })
+                },
+            },
+        });
+
+        element.init();
+        form.render();
+    });
+
+
+</script>
+
+
+</body>
+</html>

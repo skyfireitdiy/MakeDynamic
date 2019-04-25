@@ -1,13 +1,13 @@
 import base64
-import json
 import uuid
 
+import json5
 from flask import *
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 
 from admin_user import admin_user
-from config_manager import global_config, global_data, global_template, save_all_config
+from config_manager import *
 from file_manager import make_thumbnail
 from md_utils import *
 
@@ -33,38 +33,48 @@ def get_image_list():
 def admin_root():
     config = global_config.config
     return render_template("admin.html",
-                           type_data=global_data.config,
                            title=config["title"],
-                           dev=current_user.dev,
                            footer=config["footer"],
                            user_name=config["user"]["name"],
                            user_img=config["user"]["img"],
+                           module=global_module.config
+                           )
+
+
+@admin_blueprint.route("/<string:url>.html")
+@login_required
+def on_url(url):
+    url_path = url + ".html"
+    return render_template(url_path,
+                           data=global_data.config,
+                           template=global_template.config,
+                           config=global_config.config,
+                           module=global_module.config,
                            file_data=get_file_list("file_data"),
                            music_data=get_file_list("music_data"),
                            image_data=get_image_list(),
                            video_data=get_file_list("video_data"),
-                           template=global_template.config
                            )
 
 
 @admin_blueprint.route("/to_template", methods=["POST"])
 @login_required
 def to_template():
-    data = json.loads(request.form["data"])
+    data = json5.loads(request.form["data"])
     v = global_data.config
     for k in data["stack"]:
         v = v[k]
     v = v[data["key"]]
     tv = global_template.config
-    tv[data["t_name"]] = json.loads(json.dumps(v))
+    tv[data["t_name"]] = json5.loads(json5.dumps(v))
     save_all_config()
-    return json.dumps({"code": 0, "data": v})
+    return json5.dumps({"code": 0, "data": v})
 
 
 @admin_blueprint.route("/add_data", methods=["POST"])
 @login_required
 def on_add_data():
-    data = json.loads(request.form["data"])
+    data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
     if co_type == "data":
         v = global_data.config
@@ -72,19 +82,19 @@ def on_add_data():
         v = global_template.config
     for k in data["stack"]:
         v = v[k]
-    value = json.loads(json.dumps(global_template.config[data["item_type"]]))
+    value = json5.loads(json5.dumps(global_template.config[data["item_type"]]))
     if data["src_type"] == "Array":
         v.append(value)
     elif data["src_type"] == "Object":
         v[data["key"]] = value
     save_all_config()
-    return json.dumps({"code": 0, "data": value})
+    return json5.dumps({"code": 0, "data": value})
 
 
 @admin_blueprint.route("/data_change", methods=["POST"])
 @login_required
 def on_data_change():
-    data = json.loads(request.form["data"])
+    data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
     if co_type == "data":
         v = global_data.config
@@ -94,13 +104,13 @@ def on_data_change():
         v = v[k]
     v[data["stack"][len(data["stack"]) - 1]] = data["value"]
     save_all_config()
-    return json.dumps({"code": 0})
+    return json5.dumps({"code": 0})
 
 
 @admin_blueprint.route("/delete_data", methods=["POST"])
 @login_required
 def on_delete_data():
-    data = json.loads(request.form["data"])
+    data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
     if co_type == "data":
         v = global_data.config
@@ -110,7 +120,7 @@ def on_delete_data():
         v = v[k]
     del v[data["index"]]
     save_all_config()
-    return json.dumps({"code": 0})
+    return json5.dumps({"code": 0})
 
 
 @admin_blueprint.route("/change_base_info", methods=["POST"])
@@ -121,7 +131,7 @@ def on_change_base_info():
     global_config.config["title"] = title
     global_config.config["footer"] = footer
     global_config.save()
-    return json.dumps({"code": 0})
+    return json5.dumps({"code": 0})
 
 
 @admin_blueprint.route("/login_page.html")
@@ -140,30 +150,28 @@ def login():
     if not user.verify_password(user_name, password):
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
-        return json.dumps(
+        return json5.dumps(
             dict(code=1, msg="用户名或密码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
     elif captcha.lower() != session["captcha"].lower():
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
-        return json.dumps(dict(code=1, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+        return json5.dumps(dict(code=1, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
     else:
         login_user(user, remember=False)
-        current_user.dev = False
-        return json.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
+        return json5.dumps(dict(code=0, href=request.args.get('next') or "/admin"))
 
 
 @admin_blueprint.route('/get_new_captcha', methods=["POST"])
 def get_new_captcha():
     cap_str, cap_img = make_captcha()
     session["captcha"] = cap_str
-    return json.dumps(dict(code=0, new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+    return json5.dumps(dict(code=0, new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
 
 
 @admin_blueprint.route('/logout')
 @login_required
 def logout():
     logout_user()
-    current_user.dev = False
     return redirect("login_page.html")
 
 
@@ -173,24 +181,11 @@ def change_ps():
     old_ps = request.form["old_ps"]
     new_ps = request.form["new_ps"]
     if not current_user.verify_password(current_user.username, old_ps):
-        return json.dumps(dict(code=1, msg="原密码错误"))
+        return json5.dumps(dict(code=1, msg="原密码错误"))
     else:
         global_config.config["user"]["password"] = generate_password_hash(new_ps)
         global_config.save()
-        return json.dumps(dict(code=0))
-
-
-@admin_blueprint.route("/change_dev_ps", methods=["POST"])
-@login_required
-def change_dev_ps():
-    old_ps = request.form["old_dev_ps"]
-    new_ps = request.form["new_dev_ps"]
-    if not check_password_hash(global_config.config["dev_ps"], old_ps):
-        return json.dumps(dict(code=1, msg="原开发密码错误"))
-    else:
-        global_config.config["dev_ps"] = generate_password_hash(new_ps)
-        global_config.save()
-        return json.dumps(dict(code=0))
+        return json5.dumps(dict(code=0))
 
 
 @admin_blueprint.route("delete_file", methods=["POST"])
@@ -198,9 +193,9 @@ def change_dev_ps():
 def delete_file():
     file_name = os.path.join("file", request.form["type"], my_secure_filename(request.form["url"]))
     if not os.path.exists(file_name):
-        return json.dumps(dict(code=1, msg="文件不存在"))
+        return json5.dumps(dict(code=1, msg="文件不存在"))
     os.remove(file_name)
-    return json.dumps(dict(code=0))
+    return json5.dumps(dict(code=0))
 
 
 @admin_blueprint.route("delete_image", methods=["POST"])
@@ -210,39 +205,39 @@ def delete_image():
     thumbnail_file_name = os.path.join("file", "thumbnail_data", my_secure_filename(request.form["name"]))
     os.remove(image_file_name)
     os.remove(thumbnail_file_name)
-    return json.dumps(dict(code=0))
+    return json5.dumps(dict(code=0))
 
 
 @admin_blueprint.route("upload_file", methods=["POST"])
 @login_required
 def upload_file():
     if "file" not in request.files:
-        return json.dumps(dict(code=1, msg="应该上传文件"))
+        return json5.dumps(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     file_name = os.path.join("file", "file_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "file_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return json5.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_image", methods=["POST"])
 @login_required
 def upload_image():
     if "file" not in request.files:
-        return json.dumps(dict(code=1, msg="应该上传文件"))
+        return json5.dumps(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_image_ext(se_filename):
-        return json.dumps(dict(code=2, msg="图片上传仅支持jpg, jpeg, png, gif格式"))
+        return json5.dumps(dict(code=2, msg="图片上传仅支持jpg, jpeg, png, gif格式"))
     file_name = os.path.join("file", "image_data", se_filename)
     if os.path.exists(file_name):
         se_filename = uuid.uuid4().hex + "_" + se_filename
         file_name = os.path.join("file", "image_data", se_filename)
     f.save(file_name)
     thumbnail = make_thumbnail(se_filename, True)
-    return json.dumps(
+    return json5.dumps(
         dict(code=0, url=os.path.join("/", file_name.replace('\\', '/')), thumbnail=thumbnail, name=se_filename))
 
 
@@ -250,48 +245,48 @@ def upload_image():
 @login_required
 def on_article_image():
     if "file" not in request.files:
-        return json.dumps(dict(uploaded=False, url=""))
+        return json5.dumps(dict(uploaded=False, url=""))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_image_ext(se_filename):
-        return json.dumps(dict(uploaded=False, url=""))
+        return json5.dumps(dict(uploaded=False, url=""))
     file_name = os.path.join("file", "article_image_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "article_image_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json.dumps(dict(uploaded=True, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return json5.dumps(dict(uploaded=True, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_music", methods=["POST"])
 @login_required
 def upload_music():
     if "file" not in request.files:
-        return json.dumps(dict(code=1, msg="应该上传文件"))
+        return json5.dumps(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_music_ext(se_filename):
-        return json.dumps(dict(code=2, msg="音乐上传仅支持wav，mp3，ogg，acc，webm格式"))
+        return json5.dumps(dict(code=2, msg="音乐上传仅支持wav，mp3，ogg，acc，webm格式"))
     file_name = os.path.join("file", "music_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "music_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return json5.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("upload_video", methods=["POST"])
 @login_required
 def upload_video():
     if "file" not in request.files:
-        return json.dumps(dict(code=1, msg="应该上传文件"))
+        return json5.dumps(dict(code=1, msg="应该上传文件"))
     f = request.files["file"]
     se_filename = my_secure_filename(f.filename)
     if not valid_video_ext(se_filename):
-        return json.dumps(dict(code=2, msg="音乐上传仅支持mp4，ogg，webm格式"))
+        return json5.dumps(dict(code=2, msg="视频上传仅支持mp4，ogg，webm格式"))
     file_name = os.path.join("file", "video_data", se_filename)
     if os.path.exists(file_name):
         file_name = os.path.join("file", "video_data", uuid.uuid4().hex + "_" + se_filename)
     f.save(file_name)
-    return json.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
+    return json5.dumps(dict(code=0, url=os.path.join("/", file_name.replace('\\', '/'))))
 
 
 @admin_blueprint.route("change_user_info", methods=["POST"])
@@ -302,24 +297,7 @@ def change_user_info():
     global_config.config["user"]["img"] = img
     global_config.config["user"]["name"] = name
     global_config.save()
-    return json.dumps(dict(code=0))
-
-
-@admin_blueprint.route("open_dev", methods=["POST"])
-@login_required
-def open_dev():
-    dev_ps = request.form["dev_ps"]
-    if check_password_hash(global_config.config["dev_ps"], dev_ps):
-        current_user.dev = True
-        return json.dumps(dict(code=0))
-    return json.dumps(dict(code=1, msg="开发密码错误，请联系开发人员"))
-
-
-@admin_blueprint.route("close_dev", methods=["POST"])
-@login_required
-def close_dev():
-    current_user.dev = False
-    return json.dumps(dict(code=0))
+    return json5.dumps(dict(code=0))
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import argparse
 import os
 import shutil
 import hashlib
-import json
+import json5
 import mimetypes
 from werkzeug.security import generate_password_hash
 from md_utils import my_secure_filename
@@ -77,7 +77,8 @@ from flask import *
 from config import global_data
 website_blueprint = Blueprint("/", __name__, static_folder="./www/static", 
                                 template_folder="./www/template",static_url_path="/")
-                                '''
+
+'''
     template_path = os.path.join(project_path, "www/template")
     template_files = []
     for t_root, _, t_files in os.walk(template_path):
@@ -89,8 +90,9 @@ website_blueprint = Blueprint("/", __name__, static_folder="./www/static",
 @website_blueprint.route("/%s")
 def %s():
     return Response(render_template("%s", data=global_data.config), mimetype='%s')
-        ''' % (file, "_" + my_secure_filename(file).replace(".", "_").replace(" ", "_"), file,
-               mimetypes.types_map[os.path.splitext(file)[-1]])
+
+''' % (file, "_" + my_secure_filename(file).replace(".", "_").replace(" ", "_"), file,
+       mimetypes.types_map[os.path.splitext(file)[-1]])
 
     with open(os.path.join(project_path, "website.py"), "w") as fp:
         fp.write(website_content)
@@ -107,22 +109,63 @@ def %s():
     )
 
     with open(os.path.join(project_path, "config/config.json"), 'w') as fp:
-        fp.write(json.dumps(config, indent=4))
+        fp.write(json5.dumps(config, indent=4))
     if args.json_data is not None:
         shutil.copy(args.json_data, os.path.join(project_path, "config/data.json"))
     else:
         with open(os.path.join(project_path, "config/data.json"), 'w') as fp:
-            fp.write(json.dumps({}))
+            fp.write(json5.dumps({}))
     if args.data_template is not None:
         shutil.copy(args.data_template, os.path.join(project_path, "config/template.json"))
     else:
         with open(os.path.join(project_path, "config/template.json"), "w") as fp:
-            fp.write(json.dumps({
+            fp.write(json5.dumps({
                 "Number": 0,
                 "Array": [],
                 "Object": {},
                 "String": ""
             }))
+
+    with open(os.path.join(project_path, "config/module.json"), "w") as fp:
+        fp.write(json5.dumps({
+            "基础信息管理": {
+                "数据管理": {
+                    "数据设置": {
+                        "url": "data.html"
+                    },
+                    "模板设置": {
+                        "url": "template.html"
+                    }
+                },
+                "资源管理": {
+                    "普通文件管理": {
+                        "url": "normal_file_manage.html"
+                    },
+                    "图片管理": {
+                        "url": "image_manage.html"
+                    },
+                    "音乐管理": {
+                        "url": "music_manage.html"
+                    },
+                    "视频管理": {
+                        "url": "video_manage.html"
+                    }
+                },
+                "基础设置": {
+                    "后台信息设置": {
+                        "url": "base_info_manage.html"
+                    }
+                },
+                "用户及安全": {
+                    "用户信息": {
+                        "url": "user_info_manage.html"
+                    },
+                    "密码修改": {
+                        "url": "password_manage.html"
+                    }
+                }
+            }
+        }))
 
     print('''finished! Just run "cd %s && python.exe app.py"''' % project_path)
 

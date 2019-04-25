@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
+    <link rel="stylesheet" href="layui/css/layui.css" media="all">
+
+</head>
+<body class="layui-layout-body" style="overflow: auto">
+<div class="layui-layout" id="app">
+    <template>
+                <data_form :current_data="template" :stack="[]" :template="template"
+                           @data_change="on_data_change('template',$event)"
+                           @delete_data="on_delete_data('template',$event)"
+                           @add_new_data="on_add_new_data('template',$event)"
+                           co_type="template">
+                </data_form>
+    </template>
+</div>
+<div id="rich_edit" name="content" lay-ignore="true">
+</div>
+
+
+<script src="vue.js"></script>
+<script src="layui/layui.all.js" charset="utf-8"></script>
+<script src="md5.js"></script>
+<script src="classic/ckeditor.js"></script>
+
+
+
+<script>
+
+    layui.use(["jquery", "element", "layer", "form", "upload"], function () {
+        let $ = layui.jquery;
+        let element = layui.element;
+        let form = layui.form;
+        let layer = layui.layer;
+        let upload = layui.upload;
+
+        let csrf_token = "{{ csrf_token() }}";
+
+        $("#rich_edit").hide();
+
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+                }
+            }
+        });
+
+
+        class MyUploadAdapter {
+            constructor( loader ) {
+                this.loader = loader;
+                this.url = 'article_image';
+            }
+
+            upload() {
+                return this.loader.file_manager
+                    .then( file => new Promise((resolve, reject) => {
+                        this._initRequest();
+                        this._initListeners( resolve, reject, file );
+                        this._sendRequest( file );
+                    }));
+            }
+
+            abort() {
+                if ( this.xhr ) {
+                    this.xhr.abort();
+                }
+            }
+
+            _initRequest() {
+                const xhr = this.xhr = new XMLHttpRequest();
+
+                xhr.open( 'POST', this.url, true );
+                xhr.responseType = 'json';
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+
+            _initListeners( resolve, reject, file ) {
+                const xhr = this.xhr;
+                const genericErrorText = 'Couldn\'t upload file:' + ` ${ file.name }.`;
+
+                xhr.addEventListener( 'error', () => reject( genericErrorText ) );
+                xhr.addEventListener( 'abort', () => reject() );
+                xhr.addEventListener( 'load', () => {
+                    const response = xhr.response;
+                    if ( !response || response.error ) {
+                        return reject( response && response.error ? response.error.message : genericErrorText );
+                    }
+                    resolve( {
+                        default: response.url
+                    } );
+                } );
+            }
+
+            _sendRequest(file) {
+                const data = new FormData();
+                data.append( 'file_manager.py', file );
+                this.xhr.send( data );
+            }
+        }
+
+
+        function MyCustomUploadAdapterPlugin( editor ) {
+            editor.plugins.get( 'FileRepository' ).createUploadAdapter = ( loader ) => {
+                return new MyUploadAdapter( loader );
+            };
+        }
+
+
+
+        let data_form = Vue.component("data_form", {
+                name: "data_form",
+                props: ["current_data", "stack",  "template", "co_type"],
+                delimiters: ["[[", "]]"],
+                data: function () {
+                    return {
+                        tmp_value: this.current_data,
+                        expand: false,
+                        new_key_name: "",
+                        new_type: "Number",
+                        add_type_sel: "Number"
+                    }
+                },
+                methods: {
+                    multiline_edit: function(){
+                        let _this = this;
+                        layer.prompt({
+                            value: _this.tmp_value,
+                            area: ["100%", "100%"],
+                            title: _this.index_string,
+                            formType: 2
+                        }, function (value, index, item) {
+                            _this.tmp_value = value;
+                            layer.close(index);
+                        })
+                    },
+                    rich_edit: function(){
+                        let _this = this;
+                        $("#rich_edit").show();
+
+                        let rich_editor = null;
+                        ClassicEditor
+                            .create( document.querySelector('#rich_edit'),{
+                                extraPlugins: [ MyCustomUploadAdapterPlugin ],
+                                toolbar: {
+                                    items: [
+                                        "heading",
+                                        "|",
+                                        "alignment",
+                                        "imageStyle:full",
+                                        "imageStyle:side",
+                                        // "imageTextAlternative",
+                                        "bold",
+                                        "italic",
+                                        // "link",
+                                        // "bulletedList",
+                                        // "numberedList",
+                                        "imageUpload",
+                                        "blockQuote",
+                                        "insertTable",
+                                        "mediaEmbed",
+                                        "undo",
+                                        "redo"
+                                    ]
+                                },
+                                alignment: {
+                                    options: ["left", "right", "center", "justify"]
+                                },
+                                image: {
+                                    toolbar: [
+                                        "imageStyle:full",
+                                        "imageStyle:side",
+                                        "|",
+                                        "imageTextAlternative"
+                                    ]
+                                },
+                                table: {
+                                    contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"]
+                                },
+                                // This value must be kept in sync with the language defined in webpack.config.js.
+                                language: "zh-cn"
+                            })
+                            .then(editor=>{
+                                rich_editor = editor;
+                                rich_editor.setData(_this.tmp_value);
+                            })
+                            .catch( error => {
+                                console.error( error );
+                            });
+
+
+                        let rich_edit_layer = layer.open({
+                            type : 1,
+                            content: $("#rich_edit"),
+                            area:['800px','600px'],
+                            btn:["保存", "取消"],
+                            title: _this.index_string,
+                            yes: function () {
+                                _this.tmp_value = rich_editor.getData();
+                                layer.close(rich_edit_layer);
+                            },
+                            btn2: function () {
+                                layer.close(rich_edit_layer);
+                            },
+                            end: function(){
+                                $("#rich_edit").hide();
+                                $(".ck").remove();
+                            }
+                        });
+                    },
+                    get_data_type: function (_data) {
+                        if (_data === undefined) {
+                            return "Undefined";
+                        }
+                        if (_data.type === undefined) {
+                            if (_data instanceof Array) {
+                                return "Array";
+                            } else if (typeof _data == "string") {
+                                return "String";
+                            } else if (typeof _data == "number") {
+                                return "Number";
+                            } else {
+                                return "Object";
+                            }
+                        } else {
+                            return _data.type;
+                        }
+                    },
+
+                    data_changed: function () {
+                        this.$emit("data_change", {
+                            stack: this.stack,
+                            value: this.get_data_type(this.current_data) === "Number" ? this.tmp_value - 0 : this.tmp_value
+                        });
+                    },
+
+                    add_item_to_array: function (arr, item) {
+                        let ret = [];
+                        for (let i of arr) {
+                            ret.push(i);
+                        }
+                        ret.push(item);
+                        return ret;
+                    },
+                    to_string: function (obj) {
+                        if (typeof obj == "string") {
+                            return '"' + obj + "'";
+                        }
+                        return obj;
+                    },
+
+
+                    add_new: function () {
+                        let _this = this;
+                        if (_this.get_data_type(_this.current_data) === "Array") {
+                            _this.$emit("add_new_data", {
+                                src_type: "Array",
+                                key: _this.new_key_name,
+                                item_type: _this.new_type,
+                                stack: _this.stack
+                            });
+                        } else if (_this.get_data_type(_this.current_data) === "Object") {
+                            if (_this.new_key_name.length === 0) {
+                                layui.use("layer", function () {
+                                    let layer = layui.layer;
+                                    layer.msg("请先输入属性名称！", {icon: 2});
+                                })
+                            } else if (_this.current_data[_this.new_key_name] !== undefined) {
+                                layui.use("layer", function () {
+                                    let layer = layui.layer;
+                                    layer.msg("属性" + _this.new_key_name + "已存在，请使用其他属性名称", {icon: 2});
+                                })
+                            } else {
+                                _this.$emit("add_new_data", {
+                                    src_type: "Object",
+                                    key: _this.new_key_name,
+                                    item_type: _this.new_type,
+                                    stack: _this.stack
+                                });
+                            }
+                        }
+                    }
+                },
+
+                computed: {
+                    current_data_type: function () {
+                        return this.get_data_type(this.current_data);
+                    },
+                    index_string: function () {
+                        let ret = this.co_type;
+                        for (let k of this.stack) {
+                            ret += "[" + this.to_string(k) + "]";
+                        }
+                        return ret;
+                    }
+                },
+
+                template: `
+                <div class="layui-form layui-form-pane">
+                    <div class="layui-collapse" lay-accordion="" lay-filter="test">
+                        <div class="layui-colla-item">
+                            <h2 class="layui-colla-title">
+                              <span>[[ index_string ]]
+                                  <!--<i class="layui-icon layui-colla-icon">[[ expand?"":"" ]]</i>-->
+                              </span>
+                            </h2>
+                            <div class="layui-colla-content">
+                                <div v-if="current_data_type == 'Object' || current_data_type == 'Array'">
+                                    <table class="layui-table" lay-size="sm" >
+                                        <colgroup>
+                                            <col width="100">
+                                            <col>
+                                            <col width="150" v-if="co_type==='template'  || current_data_type == 'Array'">
+                                        </colgroup>
+                                        <thead>
+                                        <tr>
+                                            <th>索引</th>
+                                            <th>值</th>
+                                            <th v-if="co_type==='template'  || current_data_type == 'Array'">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr v-for="(value,key) in current_data">
+                                            <td>[[ key ]]</td>
+                                            <td>
+                                                <data_form :current_data=value :stack="add_item_to_array(stack, key)" :template="template"
+                                                           @data_change="$emit('data_change', $event);"
+                                                           @delete_data="$emit('delete_data', $event)"
+                                                           @add_new_data="$emit('add_new_data', $event)"
+                                                           @to_template="$emit('to_template', $event)"
+                                                           :co_type="co_type"
+                                                           ></data_form>
+                                            </td>
+                                            <td v-if="co_type==='template' || current_data_type === 'Array'">
+                                                <button @click="$emit('delete_data', {stack:stack, index:key})"
+                                                    class="layui-btn layui-btn-danger layui-btn-sm">
+                                                    <i class="layui-icon" title="删除">删除</i>
+                                                </button>
+                                                <button v-if="co_type==='data'" @click="$emit('to_template', {key: key,stack: stack})"
+                                                    class="layui-btn layui-btn-green layui-btn-sm">
+                                                    <i class="layui-icon" title="抽象">抽象</i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="layui-inline">
+                                        <div class="layui-input-inline">
+                                             <input type="text" v-if="(co_type==='template') && current_data_type === 'Object'"
+                                                                 v-model="new_key_name" placeholder="新属性名" class="layui-input">
+                                        </div>
+                                        <div class="layui-inline">
+                                            <select v-model="new_type" class="layui-select" lay-ignore="true" v-if="co_type==='template' || current_data_type==='Array'">
+                                                <option v-for="(v,k) in template">[[ k ]]</option>
+                                            </select>
+                                        </div>
+                                        <div class="layui-input-inline">
+                                            <button @click="add_new" class="layui-btn layui-btn-sm" v-if="co_type=='template' || current_data_type==='Array'">
+                                            <i class="layui-icon" title="新增">新增</i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else-if="current_data_type == 'String'">
+                                    <div class="layui-form-item layui-form-text">
+                                        <div class="layui-input-block layui-inline">
+                                            <input type="text" v-model="tmp_value" autocomplete="off" placeholder="请输入内容"
+                                                   class="layui-input layui-input-inline" :class="{'layui-bg-orange':tmp_value !== current_data}">
+                                            <button class="layui-btn layui-btn-radius layui-btn-sm" @click="multiline_edit">多行编辑</button>
+                                            <button class="layui-btn layui-btn-radius layui-btn-sm layui-btn-warm" @click="rich_edit">富文本编辑</button>
+                                            <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">
+                                                确认修改
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else-if="current_data_type == 'Number'">
+                                    <div class="layui-form-item layui-form-text">
+                                        <div class="layui-input-inline">
+                                            <input type="number" name="phone" lay-verify="required|number" placeholder="请输入数字"
+                                                   autocomplete="off" class="layui-input layui-input-inline" v-model="tmp_value" :class="{'layui-bg-orange':0 - tmp_value !== 0 - current_data}">
+                                            <button class="layui-btn layui-btn-normal layui-btn-radius layui-btn-sm" @click="data_changed">确认修改</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `
+            }
+        );
+
+
+        let app = new Vue({
+            el: "#app",
+            data: {
+                template:{{template|tojson}},
+            },
+            delimiters: ["[[", "]]"],
+            components: {
+                    data_form: data_form
+            },
+            methods: {
+
+            on_to_template: function(data)
+            {
+                let _this = this;
+                layer.prompt({
+                    value: _this.tmp_value,
+                    area: ["100%", "100%"],
+                    title: "请输入新的模板名称",
+                    formType: 0
+                }, function (value, index, item) {
+                    if(_this.template[value] !== undefined)
+                    {
+                        layer.msg("模板名称已存在" , {icon:2});
+                        return;
+                    }
+                    data["t_name"] = value;
+                    $.post("to_template", {"data": JSON.stringify(data)}, function (res) {
+                        let ret = JSON.parse(res);
+                        if (ret.code !== 0) {
+                            layer.msg("错误：" + ret.code, {icon: 2});
+                            return;
+                        }
+                        v = _this.template;
+                        let value = ret.data;
+                        Vue.set(v, data.key, value);
+                        layer.msg("添加成功", {icon: 1});
+                        Vue.nextTick(function(){
+                            element.init();
+                        });
+                    }).fail(function (res) {
+                        layer.msg("添加失败", {icon: 2});
+                    });
+                    layer.close(index);
+                })
+            },
+            on_add_new_data: function (co_type,data) {
+                let _this = this;
+                layui.use(["jquery", "layer"], function () {
+                    let $ = layui.jquery;
+                    let layer = layui.layer;
+                    $.post("add_data", {"data": JSON.stringify(data), "co_type" : co_type}, function (res) {
+                        let ret = JSON.parse(res);
+                        if (ret.code !== 0) {
+                            layer.msg("错误：" + ret.code, {icon: 2});
+                            return;
+                        }
+                        let v = co_type==="data"? _this.type_data : _this.template;
+                        for (let key of data.stack) {
+                            v = v[key];
+                        }
+                        let value = ret.data;
+                        if (data.src_type === "Array") {
+                            v.push(value);
+                        } else if (data.src_type === "Object") {
+                            Vue.set(v, data.key, value);
+                        }
+                        layer.msg("添加成功", {icon: 1});
+                        Vue.nextTick(function(){
+                            element.init();
+                        });
+                    }).fail(function (res) {
+                        layer.msg("添加失败", {icon: 2});
+                    });
+                });
+            },
+
+            on_data_change: function (co_type, data) {
+                let _this = this;
+                layui.use(["layer", "jquery"], function () {
+                    let layer = layui.layer;
+                    let $ = layui.jquery;
+                    let v = co_type==="data" ? _this.type_data: _this.template;
+                    for (let key of data.stack.slice(0, data.stack.length - 1)) {
+                        v = v[key];
+                    }
+                    let key = data.stack[data.stack.length - 1];
+                    layer.confirm("确认修改 ?", {
+                        btn: ['确认', '取消'] //按钮
+                    }, function () {
+                        $.post("data_change", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
+                            let ret = JSON.parse(res);
+                            if (ret.code !== 0) {
+                                layer.msg("错误：" + ret.code, {icon: 2});
+                                return;
+                            }
+                            Vue.set(v, key, data.value);
+                            layer.msg('更新成功', {icon: 1});
+                            Vue.nextTick(function(){
+                                element.init();
+                            });
+                        }).fail(function (res) {
+                            layer.msg('更新失败', {icon: 2});
+                        });
+                    }, function () {
+                    });
+                });
+            },
+
+            on_delete_data: function (co_type, data) {
+                let _this = this;
+                layui.use(["jquery", "layer"], function () {
+                    let $ = layui.jquery;
+                    let layer = layui.layer;
+
+                    let v = co_type==="data"? _this.type_data : _this.template;
+                    for (let key of data.stack) {
+                        v = v[key];
+                    }
+
+                    layer.confirm("确认将 " + data.index + " 删除 ?", {
+                        btn: ['确认', '取消'] //按钮
+                    }, function () {
+                        $.post("delete_data", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
+                            let ret = JSON.parse(res);
+                            if (ret.code !== 0) {
+                                layer.msg("错误：" + ret.code, {icon: 2});
+                                return;
+                            }
+                            Vue.delete(v, data.index);
+                            layer.msg('删除成功', {icon: 1});
+                            Vue.nextTick(function(){
+                                element.init();
+                            });
+                        }).fail(function () {
+                            layer.msg('删除失败', {icon: 2});
+                        })
+                    }, function () {
+                    });
+                });
+            },
+        },
+    });
+
+        element.init();
+        form.render();
+
+
+    });
+
+
+</script>
+
+
+</body>
+</html>

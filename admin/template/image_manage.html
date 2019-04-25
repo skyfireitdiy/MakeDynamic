@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="layui/css/layui.css" media="all">
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout" id="app">
+    <template>
+        <!-- 内容主体区域 -->
+        <div style="padding: 0px;">
+            <div class="layui-upload">
+                <button type="button" class="layui-btn" id="upload_image">选择图片</button>
+                <button type="button" class="layui-btn" id="start_upload_image">开始上传</button>
+                <div class="layui-upload-list">
+                    <img class="layui-upload-img" width="100px" height="100px" style="border-width: thin" id="upload_img_preview">
+                </div>
+            </div>
+            <table class="layui-table">
+                <colgroup>
+                    <col>
+                    <col width="180px">
+                    <col width="100px">
+                </colgroup>
+                <thead class="layui-table-header">
+                <tr>
+                    <th>
+                        图片地址
+                    </th>
+                    <th>
+                        缩略图（点击预览）
+                    </th>
+                    <th>
+                        操作
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="item in image_data">
+                    <td>[[item.url]]</td>
+                    <td style="text-align: center">
+                        <img @click="show_image(item.url)" style="border-width: 1px" width="40px" height="40px" :src="item.thumbnail">
+                    </td>
+                    <td>
+                        <button class="layui-btn layui-btn-sm layui-btn-danger" @click="delete_image(item.name)">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </template>
+</div>
+
+
+<script src="vue.js"></script>
+<script src="layui/layui.all.js" charset="utf-8"></script>
+<script src="md5.js"></script>
+<script src="classic/ckeditor.js"></script>
+
+
+
+<script>
+
+    layui.use(["jquery", "element", "layer", "form", "upload"], function () {
+        let $ = layui.jquery;
+        let element = layui.element;
+        let form = layui.form;
+        let layer = layui.layer;
+        let upload = layui.upload;
+
+        let csrf_token = "{{ csrf_token() }}";
+
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+                }
+            }
+        });
+
+
+        let app = new Vue({
+            el: "#app",
+            data: {
+                image_data:{{image_data|tojson}},
+            },
+            delimiters: ["[[", "]]"],
+            methods: {
+            show_image: function(url){
+
+                layer.photos({
+                    photos:{
+                        data:[
+                            {
+                                src: url
+                            }
+                        ]
+                    }
+                });
+            },
+
+            delete_image: function(file_name){
+                let _this = this;
+                layer.confirm("确认删除文件:"+file_name+"?",{
+                    btn:["确认","取消"]
+                }, function () {
+                    $.post("delete_image", {name:file_name}, function (res) {
+                        let result = JSON.parse(res);
+                        if(result.code === 0){
+                            layer.msg("删除成功", {icon:1});
+                            for(let i in _this.image_data){
+                                if(_this.image_data[i].name === file_name)
+                                {
+                                    Vue.delete(_this.image_data, i);
+                                    break;
+                                }
+                            }
+                        } else {
+                            layer.msg("删除失败：" + result.msg, {icon:2});
+                        }
+                    }).fail(function () {
+                        layer.msg("删除失败", {icon:2});
+                    });
+                }, function () {
+
+                });
+            },
+        },
+    });
+
+        element.init();
+        form.render();
+
+        let load_index = null;
+
+        upload.render({
+            elem: '#upload_image',
+            url: 'upload_image',
+            exts:"jpeg|jpg|png|gif|ico",
+            auto:false,
+            bindAction: "#start_upload_image",
+            choose: function(obj){
+                obj.preview(function(index, file, result){
+                    $('#upload_img_preview').attr('src', result);
+                });
+            },
+            before: function(){
+                load_index = layer.load(0);
+            },
+            done: function(res){
+                layer.close(load_index);
+                if(res.code === 0){
+                    layer.msg('图片上传成功，文件url:' + res.url, {icon:1});
+                    app.$data.image_data.push({url:res.url, name:res.name, thumbnail:res.thumbnail});
+                } else{
+                    layer.msg("上传失败："+ res.msg, {icon:2});
+                }
+            },
+            error: function () {
+                layer.close(load_index);
+                layer.msg("图片上传失败" , {icon:2});
+            }
+        });
+    });
+
+
+</script>
+
+
+</body>
+</html>
