@@ -102,7 +102,7 @@
                     let type = file_url.substring(0,file_url.lastIndexOf("/"));
                     type = type.substring(type.lastIndexOf("/")+1);
                     $.post("delete_file", {url:url, type:type}, function (res) {
-                        let result = JSON.parse(res);
+                        let result = res;
                         if(result.code === 0){
                             layer.msg("删除成功", {icon:1});
                             for(let i in data_src){

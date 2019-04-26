@@ -1,4 +1,5 @@
 import json5
+import json
 
 
 class Config:

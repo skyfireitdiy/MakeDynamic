@@ -450,7 +450,7 @@
                     btn:["确认","取消"]
                 }, function () {
                     $.post("delete_image", {name:file_name}, function (res) {
-                        let result = JSON.parse(res);
+                        let result = res;
                         if(result.code === 0){
                             layer.msg("删除成功", {icon:1});
                             for(let i in _this.image_data){
@@ -478,7 +478,7 @@
                     let type = file_url.substring(0,file_url.lastIndexOf("/"));
                     type = type.substring(type.lastIndexOf("/")+1);
                     $.post("delete_file", {url:url, type:type}, function (res) {
-                        let result = JSON.parse(res);
+                        let result = res;
                         if(result.code === 0){
                             layer.msg("删除成功", {icon:1});
                             for(let i in data_src){
@@ -514,7 +514,7 @@
                     }
                     data["t_name"] = value;
                     $.post("to_template", {"data": JSON.stringify(data)}, function (res) {
-                        let ret = JSON.parse(res);
+                        let ret = res;
                         if (ret.code !== 0) {
                             layer.msg("错误：" + ret.code, {icon: 2});
                             return;
@@ -538,7 +538,7 @@
                     let $ = layui.jquery;
                     let layer = layui.layer;
                     $.post("add_data", {"data": JSON.stringify(data), "co_type" : co_type}, function (res) {
-                        let ret = JSON.parse(res);
+                        let ret = res;
                         if (ret.code !== 0) {
                             layer.msg("错误：" + ret.code, {icon: 2});
                             return;
@@ -577,7 +577,7 @@
                         btn: ['确认', '取消'] //按钮
                     }, function () {
                         $.post("data_change", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
-                            let ret = JSON.parse(res);
+                            let ret = res;
                             if (ret.code !== 0) {
                                 layer.msg("错误：" + ret.code, {icon: 2});
                                 return;
@@ -610,7 +610,7 @@
                         btn: ['确认', '取消'] //按钮
                     }, function () {
                         $.post("delete_data", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
-                            let ret = JSON.parse(res);
+                            let ret = res;
                             if (ret.code !== 0) {
                                 layer.msg("错误：" + ret.code, {icon: 2});
                                 return;

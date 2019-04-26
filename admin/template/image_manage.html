@@ -113,7 +113,7 @@
                     btn:["确认","取消"]
                 }, function () {
                     $.post("delete_image", {name:file_name}, function (res) {
-                        let result = JSON.parse(res);
+                        let result = res;
                         if(result.code === 0){
                             layer.msg("删除成功", {icon:1});
                             for(let i in _this.image_data){

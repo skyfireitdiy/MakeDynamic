@@ -431,7 +431,7 @@
                     }
                     data["t_name"] = value;
                     $.post("to_template", {"data": JSON.stringify(data)}, function (res) {
-                        let ret = JSON.parse(res);
+                        let ret = res;
                         if (ret.code !== 0) {
                             layer.msg("错误：" + ret.code, {icon: 2});
                             return;
@@ -455,7 +455,7 @@
                     let $ = layui.jquery;
                     let layer = layui.layer;
                     $.post("add_data", {"data": JSON.stringify(data), "co_type" : co_type}, function (res) {
-                        let ret = JSON.parse(res);
+                        let ret = res;
                         if (ret.code !== 0) {
                             layer.msg("错误：" + ret.code, {icon: 2});
                             return;
@@ -494,7 +494,7 @@
                         btn: ['确认', '取消'] //按钮
                     }, function () {
                         $.post("data_change", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
-                            let ret = JSON.parse(res);
+                            let ret = res;
                             if (ret.code !== 0) {
                                 layer.msg("错误：" + ret.code, {icon: 2});
                                 return;
@@ -527,7 +527,7 @@
                         btn: ['确认', '取消'] //按钮
                     }, function () {
                         $.post("delete_data", {"data": JSON.stringify(data), "co_type":co_type}, function (res) {
-                            let ret = JSON.parse(res);
+                            let ret = res;
                             if (ret.code !== 0) {
                                 layer.msg("错误：" + ret.code, {icon: 2});
                                 return;

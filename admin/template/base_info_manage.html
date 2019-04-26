@@ -84,10 +84,16 @@
                     layer.confirm("确认将后台管理标题修改为\"" + _this.tmp_title + "\",版权信息修改为\"" + _this.tmp_footer + "\"?",{
                         btn: ["确认", "取消"]
                     }, function () {
-                        $.post("change_base_info", {title:_this.tmp_title, footer: _this.tmp_footer}, function () {
-                            layer.msg("修改成功", {icon:1});
-                            _this.title = _this.tmp_title;
-                            _this.footer = _this.tmp_footer;
+                        $.post("change_base_info", {title:_this.tmp_title, footer: _this.tmp_footer}, function (res) {
+                            if(res.code === 0) {
+                                layer.msg("修改成功", {icon: 1});
+                                _this.title = _this.tmp_title;
+                                _this.footer = _this.tmp_footer;
+                            }else{
+                                layer.msg("修改失败：" + res.msg, {icon: 2});
+                            }
+                        }).fail(function () {
+                            layer.msg("修改失败", {icon:2});
                         });
                     }, function () {
 

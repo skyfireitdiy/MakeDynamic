@@ -1,21 +1,23 @@
 # coding=utf-8
 import argparse
+import hashlib
+import json
+import mimetypes
 import os
 import shutil
-import hashlib
-import json5
-import mimetypes
+import datetime
+
 from werkzeug.security import generate_password_hash
+
 from md_utils import my_secure_filename
 
 
 def main():
     parse = argparse.ArgumentParser()
     parse.add_argument("-P", "--project", help="Project name", required=True, dest="project_name")
-    parse.add_argument("-D", "--directory", help="Output directory", dest="directory", required=True)
+    parse.add_argument("-d", "--directory", help="Output directory", dest="directory", required=True)
     parse.add_argument("-n", "--name", default="admin", help="Admin user name", required=True, dest="admin_name")
     parse.add_argument("-p", "--password", help="Admin password", required=True, dest="password")
-    parse.add_argument("-d", "--dev", help="Develop password", required=True, dest="dev_password")
     parse.add_argument("-t", "--template_dir", help="Template file directory", required=False, dest="template_dir")
     parse.add_argument("-s", "--static_dir", help="Static files directory", required=False, dest="static_dir")
     parse.add_argument("-v", "--video", help="Video files directory", required=False, dest="video_dir")
@@ -23,9 +25,15 @@ def main():
     parse.add_argument("-i", "--image", help="Image files directory", required=False, dest="image_dir")
     parse.add_argument("-f", "--file", help="General files directory", required=False, dest="file_dir")
     parse.add_argument("-N", "--port", help="Server port", required=False, default="8080", dest="port")
-    parse.add_argument("-j", "--jsondata", help="Data file with json", required=False, dest="json_data")
+    parse.add_argument("-D", "--jsondata", help="Data file with json", required=False, dest="json_data")
     parse.add_argument("-a", "--article_image", help="Article images directory", required=False, dest="article_folder")
     parse.add_argument("-T", "--data_template", help="Data tempalte file", required=False, dest="data_template")
+    parse.add_argument("-e", "--extend_data", help="Extend config file", required=False, dest="extend_config")
+    parse.add_argument("-H", "--admin_header", help="Title of backstage management page", default="后台管理页面",
+                       dest="title")
+    parse.add_argument("-F", "--footer", help="Title of backstage management page",
+                       default="Copyright © 2019-%s SkyFire. All rights reserved." % datetime.datetime.now().year,
+                       dest="footer")
 
     args = parse.parse_args()
     if not os.path.exists(args.directory) and os.makedirs(args.directory, exist_ok=True):
@@ -68,13 +76,15 @@ def main():
     os.makedirs(os.path.join(project_path, "file/music_data"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "file/video_data"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "file/article_image"), exist_ok=True)
+    os.makedirs(os.path.join(project_path, "file/thumbnail_data"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/static"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/template"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "config"), exist_ok=True)
 
     website_content = '''
 from flask import *
-from config import global_data
+from config_manager import global_data
+import json5
 website_blueprint = Blueprint("/", __name__, static_folder="./www/static", 
                                 template_folder="./www/template",static_url_path="/")
 
@@ -89,7 +99,9 @@ website_blueprint = Blueprint("/", __name__, static_folder="./www/static",
         website_content += '''
 @website_blueprint.route("/%s")
 def %s():
-    return Response(render_template("%s", data=global_data.config), mimetype='%s')
+    with open("config/data_ext.json", "r") as fp:
+        data_ext = fp.read()
+    return Response(render_template("%s", data=global_data.config, data_ext=json5.loads(data_ext)), mimetype='%s')
 
 ''' % (file, "_" + my_secure_filename(file).replace(".", "_").replace(" ", "_"), file,
        mimetypes.types_map[os.path.splitext(file)[-1]])
@@ -97,14 +109,13 @@ def %s():
     with open(os.path.join(project_path, "website.py"), "w") as fp:
         fp.write(website_content)
     config = dict(
-        title="",
-        footer="",
+        title=args.title,
+        footer=args.footer,
         user=dict(
             name=args.admin_name,
             password=generate_password_hash(hashlib.md5(args.password.encode("utf-8")).hexdigest()),
             img=""
         ),
-        dev_ps=generate_password_hash(hashlib.md5(args.dev_password.encode("utf-8")).hexdigest()),
         port=int(args.port),
     )
 
@@ -166,6 +177,12 @@ def %s():
                 }
             }
         }))
+
+    if args.extend_config is not None:
+        shutil.copy(args.extend_config, os.path.join(project_path, "config/data_ext.json"))
+    else:
+        with open(os.path.join(project_path, "config/data_ext.json"), "w") as fp:
+            fp.write(json.dumps({}))
 
     print('''finished! Just run "cd %s && python.exe app.py"''' % project_path)
 

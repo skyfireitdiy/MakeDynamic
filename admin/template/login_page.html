@@ -96,7 +96,7 @@
 
         let get_new_captcha = function () {
             $.post("get_new_captcha", {}, function (res) {
-                let result = JSON.parse(res);
+                let result = res;
                 if(result.code === 0){
                     $("#captcha_img").attr("src", "data:image/png;base64," + result.new_captcha);
                 }else{

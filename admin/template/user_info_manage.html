@@ -86,7 +86,7 @@
                         btn: ["确认", "取消"]
                     }, function(){
                         $.post("change_user_info", {name: _this.tmp_user_name, img: _this.tmp_user_img}, function(res){
-                            let result = JSON.parse(res);
+                            let result = res;
                             if(result.code === 0){
                                 layer.msg("修改成功", {icon:1});
                                 _this.user.name = _this.tmp_user_name;
