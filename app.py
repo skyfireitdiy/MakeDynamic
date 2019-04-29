@@ -3,9 +3,8 @@ import os
 from flask import *
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-
+from user import *
 from admin import admin_blueprint
-from admin_user import AdminUser
 from file_manager import file_blueprint
 from website import website_blueprint
 
@@ -33,7 +32,7 @@ app.add_template_filter(template_range, "range")
 
 @login_manager.user_loader
 def load_user(user_id):
-    return AdminUser.get(user_id)
+    return get_user(user_id)[0]
 
 
 if __name__ == "__main__":

@@ -1,15 +1,13 @@
 import base64
 import uuid
 
-import json5
 from flask import *
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash
 
-from admin_user import admin_user
 from config_manager import *
 from file_manager import make_thumbnail
 from md_utils import *
+from user import *
 
 admin_blueprint = Blueprint("admin", __name__, static_folder="./admin/static", static_url_path="/",
                             template_folder="./admin/template")
@@ -35,8 +33,8 @@ def admin_root():
     return render_template("admin.html",
                            title=config["title"],
                            footer=config["footer"],
-                           user_name=config["user"]["name"],
-                           user_img=config["user"]["img"],
+                           user_name=current_user.name,
+                           user_img=get_admin_user(current_user.id)[0].img,
                            module=global_module.config
                            )
 
@@ -54,6 +52,16 @@ def on_url(url):
                            music_data=get_file_list("music_data"),
                            image_data=get_image_list(),
                            video_data=get_file_list("video_data"),
+                           )
+
+
+@admin_blueprint.route("/user_info_manage.html")
+@login_required
+def user_info_manage():
+    url_path = "user_info_manage.html"
+    return render_template(url_path,
+                           user_img=get_admin_user(current_user.id)[0].img,
+                           user_name=current_user.name
                            )
 
 
@@ -146,8 +154,11 @@ def login():
     user_name = request.form.get('username', None)
     password = request.form.get('password', None)
     captcha = request.form.get('captcha', None)
-    user = admin_user
-    if not user.verify_password(user_name, password):
+    user_id, ret = get_user_id(user_name)
+    if not ret:
+        cap_str, cap_img = make_captcha()
+        return jsonify(dict(code=1, msg="用户不存在", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+    if not verify_password(user_id, password):
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
         return jsonify(
@@ -155,8 +166,12 @@ def login():
     elif captcha.lower() != session["captcha"].lower():
         cap_str, cap_img = make_captcha()
         session["captcha"] = cap_str
-        return jsonify(dict(code=1, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
+        return jsonify(dict(code=2, msg="验证码错误", new_captcha=base64.b64encode(cap_img.getvalue()).decode("utf-8")))
     else:
+        user, _ = get_user(user_id)
+        if not user.super:
+            abort(403)
+            return
         login_user(user, remember=False)
         return jsonify(dict(code=0, href=request.args.get('next') or "/admin"))
 
@@ -180,11 +195,11 @@ def logout():
 def change_ps():
     old_ps = request.form["old_ps"]
     new_ps = request.form["new_ps"]
-    if not current_user.verify_password(current_user.username, old_ps):
+    if not verify_password(current_user.id, old_ps):
         return jsonify(dict(code=1, msg="原密码错误"))
     else:
-        global_config.config["user"]["password"] = generate_password_hash(new_ps)
-        global_config.save()
+        update_user(current_user.id, password=new_ps)
+        user_db.commit()
         return jsonify(dict(code=0))
 
 
@@ -294,9 +309,8 @@ def upload_video():
 def change_user_info():
     name = request.form["name"]
     img = request.form["img"]
-    global_config.config["user"]["img"] = img
-    global_config.config["user"]["name"] = name
-    global_config.save()
+    update_admin_user(current_user.id, img=img)
+    update_user(current_user.id, name=name)
     return jsonify(dict(code=0))
 
 

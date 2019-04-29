@@ -1,30 +1,25 @@
 # coding=utf-8
 import argparse
-import hashlib
+import datetime
 import json
 import mimetypes
 import os
 import shutil
-import datetime
-
-from werkzeug.security import generate_password_hash
 
 from md_utils import my_secure_filename
 
 
 def main():
     parse = argparse.ArgumentParser()
-    parse.add_argument("-P", "--project", help="Project name", required=True, dest="project_name")
+    parse.add_argument("-p", "--project", help="Project name", required=True, dest="project_name")
     parse.add_argument("-d", "--directory", help="Output directory", dest="directory", required=True)
-    parse.add_argument("-n", "--name", default="admin", help="Admin user name", required=True, dest="admin_name")
-    parse.add_argument("-p", "--password", help="Admin password", required=True, dest="password")
     parse.add_argument("-t", "--template_dir", help="Template file directory", required=False, dest="template_dir")
     parse.add_argument("-s", "--static_dir", help="Static files directory", required=False, dest="static_dir")
     parse.add_argument("-v", "--video", help="Video files directory", required=False, dest="video_dir")
     parse.add_argument("-m", "--music", help="Music files directory", required=False, dest="music_dir")
     parse.add_argument("-i", "--image", help="Image files directory", required=False, dest="image_dir")
     parse.add_argument("-f", "--file", help="General files directory", required=False, dest="file_dir")
-    parse.add_argument("-N", "--port", help="Server port", required=False, default="8080", dest="port")
+    parse.add_argument("-P", "--port", help="Server port", required=False, default="8080", dest="port")
     parse.add_argument("-D", "--jsondata", help="Data file with json", required=False, dest="json_data")
     parse.add_argument("-a", "--article_image", help="Article images directory", required=False, dest="article_folder")
     parse.add_argument("-T", "--data_template", help="Data tempalte file", required=False, dest="data_template")
@@ -54,7 +49,7 @@ def main():
     shutil.copy("md_utils.py", project_path)
     shutil.copy("website.py", project_path)
     shutil.copy("app.py", project_path)
-    shutil.copy("admin_user.py", project_path)
+    shutil.copy("user.py", project_path)
 
     if args.static_dir is not None:
         shutil.copytree(args.static_dir, os.path.join(project_path, "www/static"))
@@ -80,6 +75,7 @@ def main():
     os.makedirs(os.path.join(project_path, "www/static"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "www/template"), exist_ok=True)
     os.makedirs(os.path.join(project_path, "config"), exist_ok=True)
+    os.makedirs(os.path.join(project_path, "db"), exist_ok=True)
 
     website_content = '''
 from flask import *
@@ -111,11 +107,6 @@ def %s():
     config = dict(
         title=args.title,
         footer=args.footer,
-        user=dict(
-            name=args.admin_name,
-            password=generate_password_hash(hashlib.md5(args.password.encode("utf-8")).hexdigest()),
-            img=""
-        ),
         port=int(args.port),
     )
 
@@ -184,7 +175,7 @@ def %s():
         with open(os.path.join(project_path, "config/data_ext.json"), "w") as fp:
             fp.write(json.dumps({}))
 
-    print('''finished! Just run "cd %s && python.exe app.py"''' % project_path)
+    print('''finished! Just run "cd %s && python.exe app.py"\nAdmin user name:Admin\nPassword:123456''' % project_path)
 
 
 if __name__ == "__main__":

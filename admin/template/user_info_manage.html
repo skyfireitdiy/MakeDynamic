@@ -72,11 +72,11 @@
             el: "#app",
             data: {
                 user:{
-                    name:"{{config['user']['name']}}",
-                    img:"{{config['user']['img']}}"
+                    name:"{{user_name}}",
+                    img:"{{user_img}}"
                 },
-                tmp_user_img: "{{config['user']['img']}}",
-                tmp_user_name: "{{config['user']['name']}}",
+                tmp_user_img: "{{user_img}}",
+                tmp_user_name: "{{user_name}}",
             },
             delimiters: ["[[", "]]"],
             methods: {
