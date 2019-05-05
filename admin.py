@@ -1,8 +1,9 @@
 import base64
 import uuid
+import flask_login
 
 from flask import *
-from flask_login import login_user, logout_user, login_required, current_user
+from functools import wraps
 
 from config_manager import *
 from file_manager import make_thumbnail
@@ -25,22 +26,38 @@ def get_image_list():
              "name": url} for url in url_list]
 
 
+def admin_required(func):
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if request.method in flask_login.config.EXEMPT_METHODS:
+            return func(*args, **kwargs)
+        elif current_app.login_manager._login_disabled:
+            return func(*args, **kwargs)
+        elif not flask_login.current_user.is_authenticated:
+            return current_app.login_manager.unauthorized()
+        elif not flask_login.current_user.super:
+            return current_app.login_manager.unauthorized()
+        return func(*args, **kwargs)
+
+    return decorated_view
+
+
 @admin_blueprint.route("/")
 @admin_blueprint.route("/admin.html")
-@login_required
+@admin_required
 def admin_root():
     config = global_config.config
     return render_template("admin.html",
                            title=config["title"],
                            footer=config["footer"],
-                           user_name=current_user.name,
-                           user_img=get_admin_user(current_user.id)[0].img,
+                           user_name=flask_login.current_user.name,
+                           user_img=get_admin_user(flask_login.current_user.id)[0].img,
                            module=global_module.config
                            )
 
 
 @admin_blueprint.route("/<string:url>.html")
-@login_required
+@admin_required
 def on_url(url):
     url_path = url + ".html"
     return render_template(url_path,
@@ -56,17 +73,17 @@ def on_url(url):
 
 
 @admin_blueprint.route("/user_info_manage.html")
-@login_required
+@admin_required
 def user_info_manage():
     url_path = "user_info_manage.html"
     return render_template(url_path,
-                           user_img=get_admin_user(current_user.id)[0].img,
-                           user_name=current_user.name
+                           user_img=get_admin_user(flask_login.current_user.id)[0].img,
+                           user_name=flask_login.current_user.name
                            )
 
 
 @admin_blueprint.route("/to_template", methods=["POST"])
-@login_required
+@admin_required
 def to_template():
     data = json5.loads(request.form["data"])
     v = global_data.config
@@ -80,7 +97,7 @@ def to_template():
 
 
 @admin_blueprint.route("/add_data", methods=["POST"])
-@login_required
+@admin_required
 def on_add_data():
     data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
@@ -100,7 +117,7 @@ def on_add_data():
 
 
 @admin_blueprint.route("/data_change", methods=["POST"])
-@login_required
+@admin_required
 def on_data_change():
     data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
@@ -116,7 +133,7 @@ def on_data_change():
 
 
 @admin_blueprint.route("/delete_data", methods=["POST"])
-@login_required
+@admin_required
 def on_delete_data():
     data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
@@ -132,7 +149,7 @@ def on_delete_data():
 
 
 @admin_blueprint.route("/change_base_info", methods=["POST"])
-@login_required
+@admin_required
 def on_change_base_info():
     title = request.form["title"]
     footer = request.form["footer"]
@@ -172,7 +189,7 @@ def login():
         if not user.super:
             abort(403)
             return
-        login_user(user, remember=False)
+        flask_login.login_user(user, remember=False)
         return jsonify(dict(code=0, href=request.args.get('next') or "/admin"))
 
 
@@ -184,27 +201,27 @@ def get_new_captcha():
 
 
 @admin_blueprint.route('/logout')
-@login_required
+@admin_required
 def logout():
-    logout_user()
+    flask_login.logout_user()
     return redirect("login_page.html")
 
 
 @admin_blueprint.route("/change_ps", methods=["POST"])
-@login_required
+@admin_required
 def change_ps():
     old_ps = request.form["old_ps"]
     new_ps = request.form["new_ps"]
-    if not verify_password(current_user.id, old_ps):
+    if not verify_password(flask_login.current_user.id, old_ps):
         return jsonify(dict(code=1, msg="原密码错误"))
     else:
-        update_user(current_user.id, password=new_ps)
+        update_user(flask_login.current_user.id, password=new_ps)
         user_db.commit()
         return jsonify(dict(code=0))
 
 
 @admin_blueprint.route("delete_file", methods=["POST"])
-@login_required
+@admin_required
 def delete_file():
     file_name = os.path.join("file", request.form["type"], my_secure_filename(request.form["url"]))
     if not os.path.exists(file_name):
@@ -214,7 +231,7 @@ def delete_file():
 
 
 @admin_blueprint.route("delete_image", methods=["POST"])
-@login_required
+@admin_required
 def delete_image():
     image_file_name = os.path.join("file", "image_data", my_secure_filename(request.form["name"]))
     thumbnail_file_name = os.path.join("file", "thumbnail_data", my_secure_filename(request.form["name"]))
@@ -224,7 +241,7 @@ def delete_image():
 
 
 @admin_blueprint.route("upload_file", methods=["POST"])
-@login_required
+@admin_required
 def upload_file():
     if "file" not in request.files:
         return jsonify(dict(code=1, msg="应该上传文件"))
@@ -238,7 +255,7 @@ def upload_file():
 
 
 @admin_blueprint.route("upload_image", methods=["POST"])
-@login_required
+@admin_required
 def upload_image():
     if "file" not in request.files:
         return jsonify(dict(code=1, msg="应该上传文件"))
@@ -257,7 +274,7 @@ def upload_image():
 
 
 @admin_blueprint.route("article_image", methods=["POST"])
-@login_required
+@admin_required
 def on_article_image():
     if "file" not in request.files:
         return jsonify(dict(uploaded=False, url=""))
@@ -273,7 +290,7 @@ def on_article_image():
 
 
 @admin_blueprint.route("upload_music", methods=["POST"])
-@login_required
+@admin_required
 def upload_music():
     if "file" not in request.files:
         return jsonify(dict(code=1, msg="应该上传文件"))
@@ -289,7 +306,7 @@ def upload_music():
 
 
 @admin_blueprint.route("upload_video", methods=["POST"])
-@login_required
+@admin_required
 def upload_video():
     if "file" not in request.files:
         return jsonify(dict(code=1, msg="应该上传文件"))
@@ -305,12 +322,12 @@ def upload_video():
 
 
 @admin_blueprint.route("change_user_info", methods=["POST"])
-@login_required
+@admin_required
 def change_user_info():
     name = request.form["name"]
     img = request.form["img"]
-    update_admin_user(current_user.id, img=img)
-    update_user(current_user.id, name=name)
+    update_admin_user(flask_login.current_user.id, img=img)
+    update_user(flask_login.current_user.id, name=name)
     return jsonify(dict(code=0))
 
 
