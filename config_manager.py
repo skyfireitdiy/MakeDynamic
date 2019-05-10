@@ -5,13 +5,17 @@ import json
 class Config:
     def __init__(self, filename):
         self.filename = filename
-        with open(filename, "r", encoding="utf-8") as fp:
+        self.data = {}
+        self.reload()
+
+    def reload(self):
+        with open(self.filename, "r", encoding="utf-8") as fp:
             content = fp.read()
-            self.config = json5.loads(content)
+            self.data = json5.loads(content)
 
     def save(self):
         with open(self.filename, "w") as fp:
-            fp.write(json.dumps(self.config, indent=4))
+            fp.write(json.dumps(self.data, indent=4))
 
 
 global_config = Config("config/config.json")

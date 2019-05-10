@@ -97,7 +97,7 @@ website_blueprint = Blueprint("/", __name__, static_folder="./www/static",
 def %s():
     with open("config/data_ext.json", "r") as fp:
         data_ext = fp.read()
-    return Response(render_template("%s", data=global_data.config, data_ext=json5.loads(data_ext)), mimetype='%s')
+    return Response(render_template("%s", data=global_data.data, data_ext=json5.loads(data_ext)), mimetype='%s')
 
 ''' % (file, "_" + my_secure_filename(file).replace(".", "_").replace(" ", "_"), file,
        mimetypes.types_map[os.path.splitext(file)[-1]])

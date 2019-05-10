@@ -39,4 +39,4 @@ if __name__ == "__main__":
     app.register_blueprint(admin_blueprint, url_prefix="/admin")
     app.register_blueprint(file_blueprint, url_prefix="/file")
     app.register_blueprint(website_blueprint, url_prefix="/")
-    app.run(host="0.0.0.0", port=global_config.config["port"], debug=True, use_reloader=True)
+    app.run(host="0.0.0.0", port=global_config.data["port"], debug=True, use_reloader=True)

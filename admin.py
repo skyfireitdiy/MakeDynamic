@@ -46,13 +46,13 @@ def admin_required(func):
 @admin_blueprint.route("/admin.html")
 @admin_required
 def admin_root():
-    config = global_config.config
+    config = global_config.data
     return render_template("admin.html",
                            title=config["title"],
                            footer=config["footer"],
                            user_name=flask_login.current_user.name,
                            user_img=get_admin_user(flask_login.current_user.id)[0].img,
-                           module=global_module.config
+                           module=global_module.data
                            )
 
 
@@ -61,10 +61,10 @@ def admin_root():
 def on_url(url):
     url_path = url + ".html"
     return render_template(url_path,
-                           data=global_data.config,
-                           template=global_template.config,
-                           config=global_config.config,
-                           module=global_module.config,
+                           data=global_data.data,
+                           template=global_template.data,
+                           config=global_config.data,
+                           module=global_module.data,
                            file_data=get_file_list("file_data"),
                            music_data=get_file_list("music_data"),
                            image_data=get_image_list(),
@@ -86,11 +86,11 @@ def user_info_manage():
 @admin_required
 def to_template():
     data = json5.loads(request.form["data"])
-    v = global_data.config
+    v = global_data.data
     for k in data["stack"]:
         v = v[k]
     v = v[data["key"]]
-    tv = global_template.config
+    tv = global_template.data
     tv[data["t_name"]] = json5.loads(json.dumps(v))
     save_all_config()
     return jsonify({"code": 0, "data": v})
@@ -102,12 +102,12 @@ def on_add_data():
     data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
     if co_type == "data":
-        v = global_data.config
+        v = global_data.data
     else:
-        v = global_template.config
+        v = global_template.data
     for k in data["stack"]:
         v = v[k]
-    value = json5.loads(json.dumps(global_template.config[data["item_type"]]))
+    value = json5.loads(json.dumps(global_template.data[data["item_type"]]))
     if data["src_type"] == "Array":
         v.append(value)
     elif data["src_type"] == "Object":
@@ -122,9 +122,9 @@ def on_data_change():
     data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
     if co_type == "data":
-        v = global_data.config
+        v = global_data.data
     else:
-        v = global_template.config
+        v = global_template.data
     for k in data["stack"][:-1]:
         v = v[k]
     v[data["stack"][len(data["stack"]) - 1]] = data["value"]
@@ -138,9 +138,9 @@ def on_delete_data():
     data = json5.loads(request.form["data"])
     co_type = request.form["co_type"]
     if co_type == "data":
-        v = global_data.config
+        v = global_data.data
     else:
-        v = global_template.config
+        v = global_template.data
     for k in data["stack"]:
         v = v[k]
     del v[data["index"]]
@@ -153,8 +153,8 @@ def on_delete_data():
 def on_change_base_info():
     title = request.form["title"]
     footer = request.form["footer"]
-    global_config.config["title"] = title
-    global_config.config["footer"] = footer
+    global_config.data["title"] = title
+    global_config.data["footer"] = footer
     global_config.save()
     return jsonify({"code": 0})
 
