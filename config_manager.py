@@ -15,7 +15,7 @@ class Config:
 
     def save(self):
         with open(self.filename, "w") as fp:
-            fp.write(json.dumps(self.data, indent=4))
+            fp.write(json.dumps(self.data, indent=4, ensure_ascii=False))
 
 
 global_config = Config("config/config.json")

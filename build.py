@@ -111,12 +111,12 @@ def %s():
     )
 
     with open(os.path.join(project_path, "config/config.json"), 'w') as fp:
-        fp.write(json.dumps(config, indent=4))
+        fp.write(json.dumps(config, indent=4, ensure_ascii=False))
     if args.json_data is not None:
         shutil.copy(args.json_data, os.path.join(project_path, "config/data.json"))
     else:
         with open(os.path.join(project_path, "config/data.json"), 'w') as fp:
-            fp.write(json.dumps({}))
+            fp.write(json.dumps({}, ensure_ascii=False))
     if args.data_template is not None:
         shutil.copy(args.data_template, os.path.join(project_path, "config/template.json"))
     else:
@@ -173,7 +173,7 @@ def %s():
         shutil.copy(args.extend_config, os.path.join(project_path, "config/data_ext.json"))
     else:
         with open(os.path.join(project_path, "config/data_ext.json"), "w") as fp:
-            fp.write(json.dumps({}))
+            fp.write(json.dumps({}, ensure_ascii=False))
 
     print('''finished! Just run "cd %s && python.exe app.py"\nAdmin user name:Admin\nPassword:123456''' % project_path)
 
