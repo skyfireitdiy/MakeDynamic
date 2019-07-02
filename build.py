@@ -167,7 +167,7 @@ def %s():
                     }
                 }
             }
-        }))
+        }, ensure_ascii=False, indent=4))
 
     if args.extend_config is not None:
         shutil.copy(args.extend_config, os.path.join(project_path, "config/data_ext.json"))
