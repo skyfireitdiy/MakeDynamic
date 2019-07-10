@@ -1,0 +1,7 @@
+flask
+flask_login
+flask_wtf
+json5
+captcha
+werkzeug
+pony

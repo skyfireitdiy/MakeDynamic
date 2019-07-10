@@ -23,7 +23,7 @@ def main():
     parse.add_argument("-D", "--jsondata", help="Data file with json", required=False, dest="json_data")
     parse.add_argument("-a", "--article_image", help="Article images directory", required=False, dest="article_folder")
     parse.add_argument("-T", "--data_template", help="Data tempalte file", required=False, dest="data_template")
-    parse.add_argument("-e", "--extend_data", help="Extend config file", required=False, dest="extend_config")
+    parse.add_argument("-e", "--extend_data", help="Extend data file", required=False, dest="extend_data")
     parse.add_argument("-H", "--admin_header", help="Title of backstage management page", default="后台管理页面",
                        dest="title")
     parse.add_argument("-F", "--footer", help="Title of backstage management page",
@@ -167,10 +167,10 @@ def %s():
                     }
                 }
             }
-        }))
+        }, ensure_ascii=False, indent=4))
 
-    if args.extend_config is not None:
-        shutil.copy(args.extend_config, os.path.join(project_path, "config/data_ext.json"))
+    if args.extend_data is not None:
+        shutil.copy(args.extend_data, os.path.join(project_path, "config/data_ext.json"))
     else:
         with open(os.path.join(project_path, "config/data_ext.json"), "w") as fp:
             fp.write(json.dumps({}, ensure_ascii=False))
