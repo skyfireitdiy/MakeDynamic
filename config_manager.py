@@ -14,7 +14,7 @@ class Config:
             self.data = json5.loads(content)
 
     def save(self):
-        with open(self.filename, "w") as fp:
+        with open(self.filename, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(self.data, indent=4, ensure_ascii=False))
 
 

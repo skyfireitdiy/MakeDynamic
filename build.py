@@ -102,7 +102,7 @@ def %s():
 ''' % (file, "_" + my_secure_filename(file).replace(".", "_").replace(" ", "_"), file,
        mimetypes.types_map[os.path.splitext(file)[-1]])
 
-    with open(os.path.join(project_path, "website.py"), "w") as fp:
+    with open(os.path.join(project_path, "website.py"), "w", encoding="utf-8") as fp:
         fp.write(website_content)
     config = dict(
         title=args.title,
@@ -110,17 +110,17 @@ def %s():
         port=int(args.port),
     )
 
-    with open(os.path.join(project_path, "config/config.json"), 'w') as fp:
+    with open(os.path.join(project_path, "config/config.json"), 'w', encoding="utf-8") as fp:
         fp.write(json.dumps(config, indent=4, ensure_ascii=False))
     if args.json_data is not None:
         shutil.copy(args.json_data, os.path.join(project_path, "config/data.json"))
     else:
-        with open(os.path.join(project_path, "config/data.json"), 'w') as fp:
+        with open(os.path.join(project_path, "config/data.json"), 'w', encoding="utf-8") as fp:
             fp.write(json.dumps({}, ensure_ascii=False))
     if args.data_template is not None:
         shutil.copy(args.data_template, os.path.join(project_path, "config/template.json"))
     else:
-        with open(os.path.join(project_path, "config/template.json"), "w") as fp:
+        with open(os.path.join(project_path, "config/template.json"), "w", encoding="utf-8") as fp:
             fp.write(json.dumps({
                 "Number": 0,
                 "Array": [],
@@ -128,7 +128,7 @@ def %s():
                 "String": ""
             }))
 
-    with open(os.path.join(project_path, "config/module.json"), "w") as fp:
+    with open(os.path.join(project_path, "config/module.json"), "w",encoding="utf-8") as fp:
         fp.write(json.dumps({
             "基础信息管理": {
                 "数据管理": {
@@ -172,7 +172,7 @@ def %s():
     if args.extend_data is not None:
         shutil.copy(args.extend_data, os.path.join(project_path, "config/data_ext.json"))
     else:
-        with open(os.path.join(project_path, "config/data_ext.json"), "w") as fp:
+        with open(os.path.join(project_path, "config/data_ext.json"), "w", encoding="utf-8") as fp:
             fp.write(json.dumps({}, ensure_ascii=False))
 
     print('''finished! Just run "cd %s && python.exe app.py"\nAdmin user name:Admin\nPassword:123456''' % project_path)
